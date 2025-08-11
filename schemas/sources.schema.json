@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["version", "sources"],
+  "properties": {
+    "version": {"type": "integer"},
+    "default_policies": {"type": "object"},
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id","title","category","type","path"],
+        "properties": {
+          "id": {"type": "string"},
+          "title": {"type": "string"},
+          "category": {"enum": ["business","technical","legal","marketing","research"]},
+          "type": {"enum": ["md","pdf","json","csv","txt","image","audio","video","link"]},
+          "path": {"type": "string"},
+          "policies": {"type": "object"},
+          "chunking": {"type": "object"}
+        }
+      }
+    }
+  }
+}
