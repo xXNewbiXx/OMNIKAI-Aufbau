@@ -1,30 +1,33 @@
 version: 1
 default_policies:
-  rag_allowed: true           # darf in Retrieval-Augmented-Gen genutzt werden
-  prompt_allowed: true        # darf direkt in Prompts zitiert/eingebunden werden
-  train_allowed: false        # kein Feintuning/Training
-  external_share: "no"        # "no" | "restricted" | "yes"
-  sensitivity: "internal"     # "public" | "internal" | "confidential"
+  rag_allowed: true
+  prompt_allowed: true
+  train_allowed: false
+  external_share: "no"
+  sensitivity: "internal"
 
 sources:
   - id: biz_001
-    title: OMNIKAI Blueprint README
+    title: OMNIKAI Projektüberblick
     category: business
     type: md
     path: docs/index.md
     tags: [blueprint, overview]
     language: de
-    owner: "Claude"
-    checksum: ""              # optional (wird von CI gefüllt, sonst leer lassen)
-    policies:
-      rag_allowed: true
-      prompt_allowed: true
-      external_share: "restricted"
-      sensitivity: "internal"
-    chunking:
-      method: "recursive"     # "recursive" | "by_sentence" | "by_paragraph"
-      max_tokens: 800
-      overlap_tokens: 120
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: recursive, max_tokens: 800, overlap_tokens: 120 }
+
+  - id: biz_002
+    title: OMNICODEX – Manus Paket
+    category: business
+    type: md
+    path: docs/packages/omnicodex.md
+    tags: [omnicodex, manus, workflow]
+    language: de
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: recursive, max_tokens: 800, overlap_tokens: 120 }
 
   - id: mkt_010
     title: Branding-Spec (Logo/Handle)
@@ -34,8 +37,82 @@ sources:
     tags: [branding, styleguide]
     language: de
     owner: "FairMedia"
-    policies: {}              # erbt default_policies
-    chunking:
-      method: "by_paragraph"
-      max_tokens: 600
-      overlap_tokens: 80
+    policies: {}
+    chunking: { method: by_paragraph, max_tokens: 600, overlap_tokens: 80 }
+
+  - id: tech_020
+    title: Claude Steuer-Prompt
+    category: technical
+    type: md
+    path: prompts/claude/steer.md
+    tags: [prompt, claude]
+    language: de
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: by_paragraph, max_tokens: 600, overlap_tokens: 80 }
+
+  - id: tech_021
+    title: Gemini Deep Research Prompt
+    category: technical
+    type: md
+    path: prompts/gemini/deep-research.md
+    tags: [prompt, gemini]
+    language: de
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: by_paragraph, max_tokens: 600, overlap_tokens: 80 }
+
+  - id: tech_022
+    title: Grok Trend/Red-Team Prompt
+    category: technical
+    type: md
+    path: prompts/grok/trend-check.md
+    tags: [prompt, grok]
+    language: de
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: by_paragraph, max_tokens: 600, overlap_tokens: 80 }
+
+  - id: tech_030
+    title: Think-Flow (n8n)
+    category: technical
+    type: json
+    path: flows/n8n/think-instance.json
+    tags: [n8n, flow, think]
+    language: json
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: by_paragraph, max_tokens: 700, overlap_tokens: 100 }
+
+  - id: tech_031
+    title: Execute-Flow (n8n)
+    category: technical
+    type: json
+    path: flows/n8n/execute-instance.json
+    tags: [n8n, flow, execute]
+    language: json
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: by_paragraph, max_tokens: 700, overlap_tokens: 100 }
+
+  - id: biz_100
+    title: Agentenrollen
+    category: business
+    type: md
+    path: agents/roles.md
+    tags: [rollen, governance]
+    language: de
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: by_paragraph, max_tokens: 600, overlap_tokens: 80 }
+
+  - id: tech_100
+    title: Systemarchitektur
+    category: technical
+    type: md
+    path: infra/architecture.md
+    tags: [architektur, infra]
+    language: de
+    owner: "OMNIKAI"
+    policies: {}
+    chunking: { method: recursive, max_tokens: 800, overlap_tokens: 120 }
