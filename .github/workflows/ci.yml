@@ -31,6 +31,23 @@ jobs:
             echo "Prüfe $f ..."
             cat "$f" | jq empty || exit 1
           done
+  validate_sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y jq yq
+      - name: Validate sources.yaml schema
+        run: |
+          test -f datasources/sources.yaml || (echo "sources.yaml fehlt" && exit 1)
+          yq -o=json '. ' datasources/sources.yaml > /tmp/sources.json
+          echo '${{ toJson(matrix.ignore) }}' >/dev/null # noop to avoid interpolation warnings
+          cat /tmp/sources.json | jq '.' >/dev/null
+      - name: Download ajv
+        run: |
+          npm i -g ajv-cli@5
+      - name: AJV validate
+        run: |
+          ajv validate -s schemas/sources.schema.json -d /tmp/sources.json --spec=draft7
 
       - name: Check Markdown files
         run: |
