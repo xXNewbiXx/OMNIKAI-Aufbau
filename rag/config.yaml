@@ -1,0 +1,14 @@
+version: 1
+include:
+  - "datasources/**/**/*.md"
+  - "datasources/**/**/*.pdf"
+  - "docs/**/*.md"
+index:
+  embedding_model: "to-be-set-by-controller"
+  splitter_default:
+    method: "recursive"
+    max_tokens: 800
+    overlap_tokens: 120
+Policies:
+  obey_sources_yaml: true
+  drop_if_policies_disallow: true
