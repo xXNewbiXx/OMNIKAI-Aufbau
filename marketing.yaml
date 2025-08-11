@@ -1,0 +1,17 @@
+root: digital.marketing
+nodes:
+  digital.marketing: {aliases: ["Digital Marketing"]}
+  seo: {parent: digital.marketing, aliases: ["Search Engine Optimization"]}
+  seo.onpage: {parent: seo}
+  seo.offpage: {parent: seo}
+  seo.tech: {parent: seo}
+  ppc: {parent: digital.marketing, aliases: ["Paid Search","Ads"]}
+  smm: {parent: digital.marketing, aliases: ["Social Media Marketing"]}
+  content: {parent: digital.marketing}
+  email: {parent: digital.marketing}
+  analytics: {parent: digital.marketing}
+kpi_defaults:
+  ppc.roas: 3.0
+  ppc.cpa: 8.0
+  smm.ctr: 2.5
+  smm.saves_per_week: 100

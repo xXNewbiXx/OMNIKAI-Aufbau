@@ -1,0 +1,21 @@
+{
+  "package_name": "omnicodex-manus",
+  "version": "0.1.0",
+  "created_utc": "2025-08-10T19:29:26.253711Z",
+  "entrypoints": {
+    "init_prompt": "prompts/initialisierung.omnicodex.md",
+    "ultrahard_trigger": "prompts/ultrahard-trigger.md"
+  },
+  "agents": [
+    "agents/omnicodex.agent.yaml"
+  ],
+  "workflows": [
+    "workflows/claude_flow.yaml"
+  ],
+  "kpis": [
+    "kpis/kpis.yaml"
+  ],
+  "analytics_schema": "analytics/events.schema.json",
+  "rag_config": "rag/config.json",
+  "branding": "branding/branding.md"
+}

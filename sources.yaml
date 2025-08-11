@@ -1,0 +1,10 @@
+# Ergänze/merge diese Einträge in deine bestehende Datei
+- path: /uploads/manus/mappe/**
+  type: documents
+  tags: [omnikai, fairmedia, blueprint]
+  sensitivity: internal
+
+- path: /uploads/manus/mindmaps/**
+  type: images
+  tags: [mindmap, marketing, blueprint]
+  sensitivity: internal

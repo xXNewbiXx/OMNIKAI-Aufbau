@@ -1,0 +1,6 @@
+Rename files to match DONE criteria:
+  - "OMNIKAI Compliance Check v1.0 (1).md" -> "compliance_check.md"
+  - "OMNIKAI Risk Memo - Legal Flags v1.0.md" -> "risk_memo_legal_flags.md"
+  - "OMNIKAI Go-Live Checkliste für Basti v1.0 (1).md" -> "basti_checkliste.md"
+  - "monitor_dashboard.json" stays as is (or use monitor_dashboard.pg.json from this pack)
+  - "kpi_schema.sql" -> replace with "kpi_schema.pg.sql" (from this pack) for PostgreSQL
