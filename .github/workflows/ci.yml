@@ -1,0 +1,16 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repo Sanity Check
+        run: |
+          echo "✅ CI läuft"
+          test -d docs && echo "docs/ gefunden" || (echo "docs/ fehlt" && exit 1)
+          test -d prompts && echo "prompts/ gefunden" || echo "⚠️ prompts/ fehlt (später anlegen)"
+          test -d flows && echo "flows/ gefunden" || echo "⚠️ flows/ fehlt (später anlegen)"
