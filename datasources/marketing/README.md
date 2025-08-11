@@ -1,4 +1,6 @@
 # Marketing – Zweck & Regeln
-Zweck: Branding, Social Media, Copy, Kampagnen.
-Nutzung: RAG ✅  | Prompts ✅ | Training 🚫
-Ablage: nur kuratierte, finale Inhalte (keine WIP-Notizen).
+Zweck: Branding, Social, Kampagnen, Copy, Offer-Assets.
+Nutzung: RAG ✅ | Prompts ✅ | Training 🚫
+Ablage: nur kuratierte, finale Texte/Guides (keine Rohentwürfe).
+Enthält: Styleguides, Hook-Bibliotheken, Captions, Offer-Frameworks.
+Nicht hier: Tech-Doku, Rechtstexte.
