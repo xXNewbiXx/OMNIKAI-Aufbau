@@ -1,0 +1,9 @@
+# Quellen (ergänzen)
+- path: /uploads/manus/mappe/**
+  type: documents
+  tags: [omnikai, fairmedia, blueprint]
+  sensitivity: internal
+- url: https://instagram.com/fairtech.deutschland.bewegung
+  type: social
+  tags: [smm]
+  sensitivity: public

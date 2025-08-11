@@ -1,0 +1,299 @@
+{
+  "name": "OMNIKAI Security Guards & Compliance Gates",
+  "version": "1.0.0",
+  "description": "Comprehensive security and compliance guard workflows for OMNIKAI operations",
+  "created_by": "MANUS",
+  "created_at": "2025-08-09T12:00:00Z",
+  "owner": "Claude-Flow",
+  "approval_required": "BOSS (ChatGPT)",
+  "nodes": [
+    {
+      "id": "transfer_gate_guard",
+      "name": "EU Data Transfer Gate",
+      "type": "n8n-nodes-base.function",
+      "position": [100, 100],
+      "parameters": {
+        "functionCode": "// EU Data Transfer Gate - Prevents unauthorized EU data transfers\nconst requestData = items[0].json;\nconst sourceRegion = requestData.source_region || 'UNKNOWN';\nconst targetRegion = requestData.target_region || 'UNKNOWN';\nconst dataType = requestData.data_type || 'UNKNOWN';\nconst legalBasis = requestData.legal_basis || null;\nconst consentId = requestData.consent_id || null;\n\n// EU data protection rules\nif (sourceRegion === 'EU' && targetRegion !== 'EU') {\n  // Check for valid legal basis\n  const validBases = ['consent', 'contract', 'legal_obligation', 'vital_interests', 'public_task', 'legitimate_interests'];\n  \n  if (!legalBasis || !validBases.includes(legalBasis)) {\n    throw new Error('EU data transfer blocked: No valid legal basis provided');\n  }\n  \n  // For consent-based transfers, verify consent ID\n  if (legalBasis === 'consent' && !consentId) {\n    throw new Error('EU data transfer blocked: Consent required but no consent ID provided');\n  }\n  \n  // Log transfer attempt\n  const auditLog = {\n    timestamp: new Date().toISOString(),\n    transfer_id: 'TXF_' + Date.now(),\n    source_region: sourceRegion,\n    target_region: targetRegion,\n    data_type: dataType,\n    legal_basis: legalBasis,\n    consent_id: consentId,\n    status: 'APPROVED',\n    guard_decision: 'TRANSFER_ALLOWED'\n  };\n  \n  return {\n    json: {\n      ...requestData,\n      transfer_approved: true,\n      audit_log: auditLog\n    }\n  };\n} else {\n  // Non-EU transfers or intra-EU transfers\n  const auditLog = {\n    timestamp: new Date().toISOString(),\n    transfer_id: 'TXF_' + Date.now(),\n    source_region: sourceRegion,\n    target_region: targetRegion,\n    data_type: dataType,\n    status: 'APPROVED',\n    guard_decision: 'NO_RESTRICTION'\n  };\n  \n  return {\n    json: {\n      ...requestData,\n      transfer_approved: true,\n      audit_log: auditLog\n    }\n  };\n}"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "commitment_guard",
+      "name": "Commitment Authorization Guard",
+      "type": "n8n-nodes-base.function",
+      "position": [300, 100],
+      "parameters": {
+        "functionCode": "// Commitment Guard - Prevents unauthorized business commitments\nconst commitmentData = items[0].json;\nconst commitmentType = commitmentData.commitment_type || 'UNKNOWN';\nconst commitmentValue = commitmentData.commitment_value || 0;\nconst approvalToken = commitmentData.approval_token || null;\nconst requestingAgent = commitmentData.requesting_agent || 'UNKNOWN';\n\n// Define commitment thresholds\nconst thresholds = {\n  'contract_signature': 1000,\n  'payment_authorization': 5000,\n  'service_commitment': 10000,\n  'partnership_agreement': 25000,\n  'major_decision': 50000\n};\n\nconst requiredThreshold = thresholds[commitmentType] || 1000;\n\n// Check if commitment requires approval\nif (commitmentValue >= requiredThreshold) {\n  if (!approvalToken) {\n    throw new Error(`Commitment blocked: Approval token required for ${commitmentType} worth €${commitmentValue}`);\n  }\n  \n  // Validate approval token (simplified - in production would verify cryptographic signature)\n  const tokenPattern = /^OMNIKAI_APPROVAL_[A-Z0-9]{16}$/;\n  if (!tokenPattern.test(approvalToken)) {\n    throw new Error('Commitment blocked: Invalid approval token format');\n  }\n}\n\n// Log commitment attempt\nconst auditLog = {\n  timestamp: new Date().toISOString(),\n  commitment_id: 'CMT_' + Date.now(),\n  commitment_type: commitmentType,\n  commitment_value: commitmentValue,\n  requesting_agent: requestingAgent,\n  approval_token: approvalToken ? 'PROVIDED' : 'NOT_PROVIDED',\n  threshold_required: requiredThreshold,\n  status: 'APPROVED',\n  guard_decision: 'COMMITMENT_AUTHORIZED'\n};\n\nreturn {\n  json: {\n    ...commitmentData,\n    commitment_authorized: true,\n    audit_log: auditLog\n  }\n};"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "consent_verification_guard",
+      "name": "Consent Verification Guard",
+      "type": "n8n-nodes-base.function",
+      "position": [500, 100],
+      "parameters": {
+        "functionCode": "// Consent Verification Guard - Validates marketing consent\nconst consentData = items[0].json;\nconst consentId = consentData.consent_id || null;\nconst contactEmail = consentData.contact_email || null;\nconst marketingPurpose = consentData.marketing_purpose || 'general';\nconst region = consentData.region || 'UNKNOWN';\n\n// EU requires explicit consent for marketing\nif (region === 'EU') {\n  if (!consentId) {\n    throw new Error('EU marketing blocked: No consent ID provided');\n  }\n  \n  // Validate consent ID format\n  const consentPattern = /^CONSENT_[A-Z0-9]{12}_[0-9]{10}$/;\n  if (!consentPattern.test(consentId)) {\n    throw new Error('EU marketing blocked: Invalid consent ID format');\n  }\n  \n  // Check consent expiry (simplified - in production would query consent database)\n  const consentTimestamp = parseInt(consentId.split('_')[2]);\n  const consentAge = Date.now() / 1000 - consentTimestamp;\n  const maxAge = 365 * 24 * 60 * 60; // 1 year\n  \n  if (consentAge > maxAge) {\n    throw new Error('EU marketing blocked: Consent expired');\n  }\n}\n\n// Log consent verification\nconst auditLog = {\n  timestamp: new Date().toISOString(),\n  verification_id: 'VER_' + Date.now(),\n  consent_id: consentId,\n  contact_email: contactEmail ? 'PROVIDED' : 'NOT_PROVIDED',\n  marketing_purpose: marketingPurpose,\n  region: region,\n  status: 'VERIFIED',\n  guard_decision: 'CONSENT_VALID'\n};\n\nreturn {\n  json: {\n    ...consentData,\n    consent_verified: true,\n    audit_log: auditLog\n  }\n};"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "rate_limit_guard",
+      "name": "Rate Limiting Guard",
+      "type": "n8n-nodes-base.function",
+      "position": [700, 100],
+      "parameters": {
+        "functionCode": "// Rate Limiting Guard - Prevents API abuse and ensures fair usage\nconst requestData = items[0].json;\nconst clientId = requestData.client_id || 'anonymous';\nconst apiEndpoint = requestData.api_endpoint || 'unknown';\nconst requestTimestamp = Date.now();\n\n// Define rate limits per endpoint\nconst rateLimits = {\n  '/api/v1/leads': { requests: 100, window: 3600 }, // 100 requests per hour\n  '/api/v1/proposals': { requests: 50, window: 3600 }, // 50 requests per hour\n  '/api/v1/contracts': { requests: 20, window: 3600 }, // 20 requests per hour\n  '/api/v1/payments': { requests: 10, window: 3600 }, // 10 requests per hour\n  'default': { requests: 200, window: 3600 } // Default limit\n};\n\nconst limit = rateLimits[apiEndpoint] || rateLimits['default'];\n\n// Simulate rate limit check (in production would use Redis or similar)\nconst windowStart = Math.floor(requestTimestamp / 1000 / limit.window) * limit.window;\nconst requestKey = `${clientId}:${apiEndpoint}:${windowStart}`;\n\n// For simulation, assume current request count (in production would increment counter)\nconst currentCount = Math.floor(Math.random() * limit.requests * 0.8); // Simulate 80% usage\n\nif (currentCount >= limit.requests) {\n  throw new Error(`Rate limit exceeded: ${currentCount}/${limit.requests} requests in ${limit.window}s window`);\n}\n\n// Log rate limit check\nconst auditLog = {\n  timestamp: new Date().toISOString(),\n  rate_check_id: 'RATE_' + Date.now(),\n  client_id: clientId,\n  api_endpoint: apiEndpoint,\n  current_count: currentCount,\n  limit: limit.requests,\n  window_seconds: limit.window,\n  status: 'ALLOWED',\n  guard_decision: 'RATE_LIMIT_OK'\n};\n\nreturn {\n  json: {\n    ...requestData,\n    rate_limit_passed: true,\n    remaining_requests: limit.requests - currentCount - 1,\n    audit_log: auditLog\n  }\n};"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "data_quality_guard",
+      "name": "Data Quality Guard",
+      "type": "n8n-nodes-base.function",
+      "position": [900, 100],
+      "parameters": {
+        "functionCode": "// Data Quality Guard - Validates data integrity and completeness\nconst inputData = items[0].json;\nconst dataType = inputData.data_type || 'unknown';\nconst payload = inputData.payload || {};\n\n// Define validation rules per data type\nconst validationRules = {\n  'lead_data': {\n    required_fields: ['email', 'company_name', 'contact_name'],\n    email_validation: true,\n    max_length: { company_name: 100, contact_name: 50 }\n  },\n  'financial_data': {\n    required_fields: ['amount', 'currency', 'transaction_type'],\n    numeric_validation: ['amount'],\n    allowed_currencies: ['EUR', 'USD', 'GBP']\n  },\n  'compliance_data': {\n    required_fields: ['consent_id', 'data_subject_id', 'processing_purpose'],\n    format_validation: { consent_id: /^CONSENT_[A-Z0-9]{12}_[0-9]{10}$/ }\n  }\n};\n\nconst rules = validationRules[dataType];\nconst errors = [];\n\nif (rules) {\n  // Check required fields\n  if (rules.required_fields) {\n    for (const field of rules.required_fields) {\n      if (!payload[field] || payload[field] === '') {\n        errors.push(`Missing required field: ${field}`);\n      }\n    }\n  }\n  \n  // Email validation\n  if (rules.email_validation && payload.email) {\n    const emailPattern = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n    if (!emailPattern.test(payload.email)) {\n      errors.push('Invalid email format');\n    }\n  }\n  \n  // Length validation\n  if (rules.max_length) {\n    for (const [field, maxLen] of Object.entries(rules.max_length)) {\n      if (payload[field] && payload[field].length > maxLen) {\n        errors.push(`Field ${field} exceeds maximum length of ${maxLen}`);\n      }\n    }\n  }\n  \n  // Numeric validation\n  if (rules.numeric_validation) {\n    for (const field of rules.numeric_validation) {\n      if (payload[field] && isNaN(Number(payload[field]))) {\n        errors.push(`Field ${field} must be numeric`);\n      }\n    }\n  }\n  \n  // Currency validation\n  if (rules.allowed_currencies && payload.currency) {\n    if (!rules.allowed_currencies.includes(payload.currency)) {\n      errors.push(`Invalid currency: ${payload.currency}`);\n    }\n  }\n  \n  // Format validation\n  if (rules.format_validation) {\n    for (const [field, pattern] of Object.entries(rules.format_validation)) {\n      if (payload[field] && !pattern.test(payload[field])) {\n        errors.push(`Field ${field} has invalid format`);\n      }\n    }\n  }\n}\n\nif (errors.length > 0) {\n  throw new Error(`Data quality validation failed: ${errors.join(', ')}`);\n}\n\n// Log data quality check\nconst auditLog = {\n  timestamp: new Date().toISOString(),\n  quality_check_id: 'QC_' + Date.now(),\n  data_type: dataType,\n  validation_rules_applied: Object.keys(rules || {}),\n  errors_found: errors.length,\n  status: 'PASSED',\n  guard_decision: 'DATA_QUALITY_OK'\n};\n\nreturn {\n  json: {\n    ...inputData,\n    data_quality_passed: true,\n    validation_score: 100,\n    audit_log: auditLog\n  }\n};"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "security_scan_guard",
+      "name": "Security Scanning Guard",
+      "type": "n8n-nodes-base.function",
+      "position": [1100, 100],
+      "parameters": {
+        "functionCode": "// Security Scanning Guard - Detects potential security threats\nconst requestData = items[0].json;\nconst userAgent = requestData.user_agent || '';\nconst ipAddress = requestData.ip_address || '0.0.0.0';\nconst requestPayload = JSON.stringify(requestData.payload || {});\nconst requestHeaders = requestData.headers || {};\n\nconst securityIssues = [];\nlet riskScore = 0;\n\n// Check for suspicious user agents\nconst suspiciousAgents = ['bot', 'crawler', 'scanner', 'hack', 'exploit'];\nfor (const suspicious of suspiciousAgents) {\n  if (userAgent.toLowerCase().includes(suspicious)) {\n    securityIssues.push(`Suspicious user agent detected: ${suspicious}`);\n    riskScore += 20;\n  }\n}\n\n// Check for SQL injection patterns\nconst sqlPatterns = [\"'\", '\"', ';', '--', '/*', '*/', 'union', 'select', 'drop', 'delete'];\nfor (const pattern of sqlPatterns) {\n  if (requestPayload.toLowerCase().includes(pattern)) {\n    securityIssues.push(`Potential SQL injection pattern: ${pattern}`);\n    riskScore += 30;\n  }\n}\n\n// Check for XSS patterns\nconst xssPatterns = ['<script', 'javascript:', 'onload=', 'onerror=', 'onclick='];\nfor (const pattern of xssPatterns) {\n  if (requestPayload.toLowerCase().includes(pattern)) {\n    securityIssues.push(`Potential XSS pattern: ${pattern}`);\n    riskScore += 25;\n  }\n}\n\n// Check for suspicious IP ranges (simplified)\nconst suspiciousIpRanges = ['10.0.0.', '192.168.', '127.0.0.'];\nfor (const range of suspiciousIpRanges) {\n  if (ipAddress.startsWith(range)) {\n    securityIssues.push(`Request from internal/local IP: ${ipAddress}`);\n    riskScore += 10;\n  }\n}\n\n// Check for missing security headers\nconst requiredHeaders = ['x-forwarded-for', 'user-agent'];\nfor (const header of requiredHeaders) {\n  if (!requestHeaders[header]) {\n    securityIssues.push(`Missing security header: ${header}`);\n    riskScore += 5;\n  }\n}\n\n// Determine risk level\nlet riskLevel = 'LOW';\nif (riskScore >= 50) {\n  riskLevel = 'HIGH';\n} else if (riskScore >= 25) {\n  riskLevel = 'MEDIUM';\n}\n\n// Block high-risk requests\nif (riskLevel === 'HIGH') {\n  throw new Error(`Security scan failed: High risk detected (score: ${riskScore}). Issues: ${securityIssues.join(', ')}`);\n}\n\n// Log security scan\nconst auditLog = {\n  timestamp: new Date().toISOString(),\n  security_scan_id: 'SEC_' + Date.now(),\n  ip_address: ipAddress,\n  user_agent: userAgent ? 'PROVIDED' : 'MISSING',\n  risk_score: riskScore,\n  risk_level: riskLevel,\n  issues_found: securityIssues.length,\n  issues: securityIssues,\n  status: 'PASSED',\n  guard_decision: 'SECURITY_OK'\n};\n\nreturn {\n  json: {\n    ...requestData,\n    security_scan_passed: true,\n    risk_score: riskScore,\n    risk_level: riskLevel,\n    audit_log: auditLog\n  }\n};"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "audit_logger",
+      "name": "Comprehensive Audit Logger",
+      "type": "n8n-nodes-base.postgres",
+      "position": [1300, 100],
+      "parameters": {
+        "operation": "insert",
+        "table": "security_audit_log",
+        "columns": "timestamp,event_type,guard_type,request_id,client_id,ip_address,user_agent,risk_score,status,details",
+        "values": "={{$json.audit_log.timestamp}},security_guard,{{$node.name}},{{$json.request_id}},{{$json.client_id}},{{$json.ip_address}},{{$json.user_agent}},{{$json.risk_score}},{{$json.audit_log.status}},{{JSON.stringify($json.audit_log)}}"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "alert_manager",
+      "name": "Security Alert Manager",
+      "type": "n8n-nodes-base.function",
+      "position": [1500, 100],
+      "parameters": {
+        "functionCode": "// Security Alert Manager - Manages security alerts and notifications\nconst alertData = items[0].json;\nconst riskLevel = alertData.risk_level || 'LOW';\nconst guardType = alertData.guard_type || 'unknown';\nconst timestamp = new Date().toISOString();\n\n// Define alert thresholds and escalation rules\nconst alertRules = {\n  'HIGH': {\n    immediate_notification: true,\n    channels: ['slack_security', 'email_security_team', 'sms_on_call'],\n    escalation_delay: 0,\n    requires_human_review: true\n  },\n  'MEDIUM': {\n    immediate_notification: true,\n    channels: ['slack_security', 'email_security_team'],\n    escalation_delay: 300, // 5 minutes\n    requires_human_review: false\n  },\n  'LOW': {\n    immediate_notification: false,\n    channels: ['slack_security'],\n    escalation_delay: 3600, // 1 hour\n    requires_human_review: false\n  }\n};\n\nconst rule = alertRules[riskLevel] || alertRules['LOW'];\n\n// Generate alert\nconst alert = {\n  alert_id: 'ALERT_' + Date.now(),\n  timestamp: timestamp,\n  severity: riskLevel,\n  guard_type: guardType,\n  message: `Security guard ${guardType} detected ${riskLevel} risk`,\n  details: alertData.audit_log || {},\n  notification_channels: rule.channels,\n  escalation_delay: rule.escalation_delay,\n  requires_human_review: rule.requires_human_review,\n  status: 'ACTIVE'\n};\n\n// Log alert generation\nconst auditLog = {\n  timestamp: timestamp,\n  alert_id: alert.alert_id,\n  severity: riskLevel,\n  guard_type: guardType,\n  notification_sent: rule.immediate_notification,\n  escalation_scheduled: rule.escalation_delay > 0,\n  status: 'ALERT_GENERATED'\n};\n\nreturn {\n  json: {\n    ...alertData,\n    alert_generated: true,\n    alert: alert,\n    audit_log: auditLog\n  }\n};"
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "transfer_gate_guard": {
+      "main": [
+        [
+          {
+            "node": "audit_logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "commitment_guard": {
+      "main": [
+        [
+          {
+            "node": "audit_logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consent_verification_guard": {
+      "main": [
+        [
+          {
+            "node": "audit_logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rate_limit_guard": {
+      "main": [
+        [
+          {
+            "node": "audit_logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data_quality_guard": {
+      "main": [
+        [
+          {
+            "node": "audit_logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "security_scan_guard": {
+      "main": [
+        [
+          {
+            "node": "audit_logger",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "alert_manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "audit_logger": {
+      "main": [
+        [
+          {
+            "node": "alert_manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "security_error_handler"
+  },
+  "staticData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 6,
+  "tags": [
+    {
+      "id": "security",
+      "name": "Security Guards"
+    },
+    {
+      "id": "compliance",
+      "name": "Compliance Gates"
+    },
+    {
+      "id": "data_protection",
+      "name": "Data Protection"
+    }
+  ],
+  "kpis": {
+    "transfer_gate_effectiveness_percent": {
+      "target": 100,
+      "abort_threshold": 95,
+      "measurement": "blocked_unauthorized_transfers / total_transfer_attempts * 100"
+    },
+    "commitment_guard_success_rate_percent": {
+      "target": 100,
+      "abort_threshold": 98,
+      "measurement": "authorized_commitments / total_commitment_attempts * 100"
+    },
+    "consent_verification_accuracy_percent": {
+      "target": 100,
+      "abort_threshold": 95,
+      "measurement": "valid_consents_verified / total_consent_checks * 100"
+    },
+    "rate_limit_enforcement_percent": {
+      "target": 100,
+      "abort_threshold": 98,
+      "measurement": "rate_limits_enforced / rate_limit_violations_detected * 100"
+    },
+    "data_quality_pass_rate_percent": {
+      "target": 95,
+      "abort_threshold": 85,
+      "measurement": "data_quality_passed / total_data_validations * 100"
+    },
+    "security_threat_detection_rate_percent": {
+      "target": 98,
+      "abort_threshold": 90,
+      "measurement": "threats_detected / total_security_scans * 100"
+    },
+    "guard_response_time_ms": {
+      "target": 100,
+      "abort_threshold": 500,
+      "measurement": "average_guard_processing_time"
+    },
+    "false_positive_rate_percent": {
+      "target": 2,
+      "abort_threshold": 10,
+      "measurement": "false_positives / total_detections * 100"
+    }
+  },
+  "abort_criteria": {
+    "timeframe_days": 14,
+    "criteria": [
+      "Transfer gate effectiveness <95%",
+      "Commitment guard success rate <98%",
+      "Consent verification accuracy <95%",
+      "Rate limit enforcement <98%",
+      "Data quality pass rate <85%",
+      "Security threat detection <90%",
+      "Guard response time >500ms average",
+      "False positive rate >10%",
+      "Any guard completely failing for >1 hour",
+      "Audit logging failures >1% of events"
+    ],
+    "escalation_procedure": "Immediate escalation to Claude-Flow for any guard failure, BOSS escalation for multiple guard failures"
+  },
+  "logging_requirements": {
+    "all_guard_executions": true,
+    "security_events": true,
+    "compliance_violations": true,
+    "performance_metrics": true,
+    "audit_trail": "immutable",
+    "retention_period": "7_years"
+  },
+  "monitoring": {
+    "real_time_dashboards": true,
+    "alert_integration": true,
+    "performance_tracking": true,
+    "compliance_reporting": true,
+    "security_incident_tracking": true
+  },
+  "assumptions": [
+    "Network connectivity remains stable for guard operations",
+    "Database systems maintain high availability for audit logging",
+    "Security threat patterns remain detectable with current rules",
+    "Compliance requirements remain stable with reasonable notice for changes",
+    "Guard processing capacity scales with system load",
+    "External security services remain available and reliable",
+    "Staff training maintains current security awareness levels",
+    "Backup systems activate within acceptable timeframes during failures"
+  ],
+  "dependencies": [
+    "PostgreSQL database for audit logging",
+    "Redis for rate limiting and caching",
+    "Slack integration for security alerts",
+    "Email system for notifications",
+    "SMS service for emergency alerts",
+    "External threat intelligence feeds",
+    "Compliance database for consent verification",
+    "Monitoring and alerting infrastructure"
+  ]
+}
+

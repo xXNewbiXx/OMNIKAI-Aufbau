@@ -1,0 +1,13 @@
+{
+  "chunk_size_chars": 1200,
+  "chunk_overlap_chars": 200,
+  "embedding_model": "text-embedding-3-large",
+  "metadata": [
+    "source",
+    "author",
+    "date",
+    "tags",
+    "sensitivity"
+  ],
+  "dedupe": true
+}
