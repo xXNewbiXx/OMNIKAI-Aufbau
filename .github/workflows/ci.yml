@@ -8,9 +8,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Repo Sanity Check
+
+      - name: Sanity Check – Ordnerstruktur
         run: |
           echo "✅ CI läuft"
-          test -d docs && echo "docs/ gefunden" || (echo "docs/ fehlt" && exit 1)
-          test -d prompts && echo "prompts/ gefunden" || echo "⚠️ prompts/ fehlt (später anlegen)"
-          test -d flows && echo "flows/ gefunden" || echo "⚠️ flows/ fehlt (später anlegen)"
+          test -d docs && echo "docs/ gefunden" || (echo "❌ docs/ fehlt" && exit 1)
+          test -d prompts && echo "prompts/ gefunden" || echo "⚠️ prompts/ fehlt"
+          test -d flows && echo "flows/ gefunden" || echo "⚠️ flows/ fehlt"
+
+      - name: Validate README format
+        run: |
+          if grep -q "^# " README.md; then
+            echo "✅ README hat Titel"
+          else
+            echo "❌ README hat keinen Titel" && exit 1
+          fi
+
+      - name: Validate JSON files in flows/
+        run: |
+          shopt -s nullglob
+          for f in flows/**/*.json; do
+            echo "Prüfe $f ..."
+            cat "$f" | jq empty || exit 1
+          done
+
+      - name: Check Markdown files
+        run: |
+          find . -name "*.md" -print | while read file; do
+            echo "Prüfe $file ..."
+            head -n 1 "$file" >/dev/null || exit 1
+          done
