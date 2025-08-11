@@ -1,7 +1,7 @@
 ![CI](https://github.com/xXNewbiXx/OMNIKAI-Aufbau/actions/workflows/ci.yml/badge.svg)
 
 # OMNIKAI – Aufbau (Blueprint)
-Robustes, modular skalierbares Multi‑Agenten‑System. Steuer‑KI: Claude. Unterstützend: Gemini (Deep Research), Grok (Trend/Red‑Team). Orchestrierung über zwei gekoppelte n8n‑Flows (*Think* → Struktur, *Execute* → Umsetzung).
+Robustes, modular skalierbares Multi‑Agenten‑System. Steuer‑KI: Claude. Unterstützend: Gemini (Deep Research), Grok (Trend/Red‑Team). Orchestrierung über zwei gekoppelte n8n‑Flows (*Think* → Struktur, *Execute* → Umsetzung). 
 
 ## Ordner
 - `/docs` – Doku & Landing (GitHub Pages)
