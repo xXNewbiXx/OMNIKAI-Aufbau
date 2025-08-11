@@ -9,6 +9,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install tools (jq)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
       - name: Sanity Check – Ordnerstruktur
         run: |
           echo "✅ CI läuft"
@@ -31,27 +36,32 @@ jobs:
             echo "Prüfe $f ..."
             cat "$f" | jq empty || exit 1
           done
+
   validate_sources:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y jq yq
-      - name: Validate sources.yaml schema
-        run: |
-          test -f datasources/sources.yaml || (echo "sources.yaml fehlt" && exit 1)
-          yq -o=json '. ' datasources/sources.yaml > /tmp/sources.json
-          echo '${{ toJson(matrix.ignore) }}' >/dev/null # noop to avoid interpolation warnings
-          cat /tmp/sources.json | jq '.' >/dev/null
-      - name: Download ajv
-        run: |
-          npm i -g ajv-cli@5
-      - name: AJV validate
-        run: |
-          ajv validate -s schemas/sources.schema.json -d /tmp/sources.json --spec=draft7
 
-      - name: Check Markdown files
+      - name: Ensure sources & schema exist
         run: |
-          find . -name "*.md" -print | while read file; do
-            echo "Prüfe $file ..."
-            head -n 1 "$file" >/dev/null || exit 1
-          done
+          test -f datasources/sources.yaml || (echo "❌ datasources/sources.yaml fehlt" && exit 1)
+          test -f schemas/sources.schema.json || (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
+
+      - name: Convert YAML to JSON
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+          python - <<'PY'
+          import json, yaml
+          with open('datasources/sources.yaml','r', encoding='utf-8') as f:
+              data = yaml.safe_load(f)
+          with open('/tmp/sources.json','w', encoding='utf-8') as f:
+              json.dump(data, f)
+          print("OK: /tmp/sources.json geschrieben")
+          PY
+
+      - name: Install ajv
+        run: npm i -g ajv-cli@5
+
+      - name: AJV validate
+        run: ajv validate -s schemas/sources.schema.json -d /tmp/sources.json --spec=draft7
