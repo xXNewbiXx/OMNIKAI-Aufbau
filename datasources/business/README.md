@@ -1,4 +1,6 @@
-# Business – Wissensregal
-**Zweck:** Strategie, KPIs, Angebote, Playbooks.
-**Nutzen:** RAG: ✅ | Prompt: ✅ | Training: 🚫 (sofern nicht anders in `sources.yaml`).
-**Ablage-Regel:** Nur final/kuratierte Inhalte (keine WIP‑Notizen).
+# Business – Zweck & Regeln
+Zweck: Strategie, KPIs, Angebote, Playbooks.
+Nutzung: RAG ✅ | Prompts ✅ | Training 🚫
+Ablage: nur finale, kuratierte Inhalte (keine WIP-Notizen oder Rohentwürfe).
+Enthält: Geschäftsmodelle, Marktstrategien, Preislisten, Angebotsvorlagen.
+Nicht hier: technische Dokus, rechtliche Texte, Marketing-Copy.
