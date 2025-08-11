@@ -1,0 +1,41 @@
+version: 1
+default_policies:
+  rag_allowed: true           # darf in Retrieval-Augmented-Gen genutzt werden
+  prompt_allowed: true        # darf direkt in Prompts zitiert/eingebunden werden
+  train_allowed: false        # kein Feintuning/Training
+  external_share: "no"        # "no" | "restricted" | "yes"
+  sensitivity: "internal"     # "public" | "internal" | "confidential"
+
+sources:
+  - id: biz_001
+    title: OMNIKAI Blueprint README
+    category: business
+    type: md
+    path: docs/index.md
+    tags: [blueprint, overview]
+    language: de
+    owner: "Claude"
+    checksum: ""              # optional (wird von CI gefüllt, sonst leer lassen)
+    policies:
+      rag_allowed: true
+      prompt_allowed: true
+      external_share: "restricted"
+      sensitivity: "internal"
+    chunking:
+      method: "recursive"     # "recursive" | "by_sentence" | "by_paragraph"
+      max_tokens: 800
+      overlap_tokens: 120
+
+  - id: mkt_010
+    title: Branding-Spec (Logo/Handle)
+    category: marketing
+    type: md
+    path: docs/packages/omnicodex.md#branding
+    tags: [branding, styleguide]
+    language: de
+    owner: "FairMedia"
+    policies: {}              # erbt default_policies
+    chunking:
+      method: "by_paragraph"
+      max_tokens: 600
+      overlap_tokens: 80
