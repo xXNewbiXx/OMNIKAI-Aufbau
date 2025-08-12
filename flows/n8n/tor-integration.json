@@ -1,0 +1,54 @@
+{
+  "name": "OMNIKAI - Tor Integration Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "command": "sudo apt update && sudo apt install tor -y && sudo systemctl enable tor && sudo systemctl start tor"
+      },
+      "name": "Install Tor",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "command": "echo 'HiddenServiceDir /var/lib/tor/n8n_service/' | sudo tee -a /etc/tor/torrc && echo 'HiddenServicePort 80 127.0.0.1:5678' | sudo tee -a /etc/tor/torrc && sudo systemctl restart tor && sudo cat /var/lib/tor/n8n_service/hostname"
+      },
+      "name": "Setup Onion Service",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{json: {message: 'Tor-Netzwerk eingerichtet. Onion-Adresse siehe vorherigen Output.'}}];"
+      },
+      "name": "Confirm Setup",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const axios = require('axios');\n(async () => {\n  await axios.post('http://<onion-url>/webhook/xyz', {}, {\n    proxy: { host: '127.0.0.1', port: 9050, protocol: 'socks5' }\n  });\n})();\nreturn [{json: {status: 'Agent triggered via Tor'}}];"
+      },
+      "name": "Trigger Agent via Tor",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "Install Tor", "type": "main", "index": 0 }]] },
+    "Install Tor": { "main": [[{ "node": "Setup Onion Service", "type": "main", "index": 0 }]] },
+    "Setup Onion Service": { "main": [[{ "node": "Confirm Setup", "type": "main", "index": 0 }]] },
+    "Confirm Setup": { "main": [[{ "node": "Trigger Agent via Tor", "type": "main", "index": 0 }]] }
+  }
+}
