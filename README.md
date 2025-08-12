@@ -5,10 +5,11 @@ Robustes, modular skalierbares Multi‑Agenten‑System. Steuer‑KI: Claude. Un
 
 ## Ordner
 - `/docs` – Doku & Landing (GitHub Pages)
+  - `/docs/archive` – Historische Ablage
 - `/flows/n8n` – Exporte der zwei Flows
 - `/prompts` – Start‑Prompts
 - `/agents` – Rollen
-- `/infra` – Architektur
+- `/infra` – Architektur & Schemas
 
 ## Pakete/Module
 - **OMNICODEX (Manus‑Paket)** → siehe `docs/packages/omnicodex.md`
@@ -23,3 +24,8 @@ Beiträge sind willkommen! Bitte lies [CONTRIBUTING.md](CONTRIBUTING.md) und bea
 
 ## Lizenz
 Dieses Projekt steht unter der [MIT-Lizenz](LICENSE.md).
+
+## Next Steps
+- Automatisierte Tests ergänzen
+- CI weiter härten
+- n8n-Flows produktiv ausbauen
