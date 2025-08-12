@@ -21,21 +21,11 @@ jobs:
           test -d prompts || echo "⚠️ prompts/ fehlt"
           test -d flows || echo "⚠️ flows/ fehlt"
 
-      - name: Lint Markdown
-        run: npx -y markdownlint-cli README.md docs/branch-protection.md docs/reports/ci-notes.md --disable MD013
+      - name: Check Markdown
+        run: bash scripts/sanity/check-markdown.sh
 
-      - name: Validate README format
-        run: |
-          grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
-          echo "✅ README hat Titel"
-
-      - name: Check JSON syntax
-        run: |
-          for f in $(git ls-files '*.json'); do
-            echo "Checking $f"
-            jq empty "$f" || { echo "❌ Invalid JSON in $f"; exit 1; }
-          done
-          echo "✅ JSON syntax ok"
+      - name: Check JSON
+        run: bash scripts/sanity/check-json.sh
 
       - name: Validate n8n flow schemas
         run: |

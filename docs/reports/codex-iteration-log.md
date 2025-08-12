@@ -99,3 +99,19 @@
 - **Verworfene Alternativen:** vollständiger Covenant-Text
 - **Finale Bewertung:** 9.5/10
 - **Offene Punkte / Nächste Schritte:** keine
+
+## Runde 13
+- **Dateien:** `scripts/sanity/check-json.sh`, `scripts/sanity/check-markdown.sh`, `Makefile`, `docs/development/local-checks.md`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Grundchecks für JSON und Markdown samt Makefile hinzugefügt
+- **Variante gewählt:** Variante 1 – Bash-Skripte mit Makefile
+- **Begründung:** Einfach lokal nutzbar und in CI wiederverwendbar
+- **Verworfene Alternativen:** Variante 2 – npm-Skripte; Variante 3 – Python-Checker; Variante 4 – separate Docker-Images
+- **Offene Punkte / Nächste Schritte:** CI auf neue Skripte umstellen
+
+## Runde 14
+- **Dateien:** `.github/workflows/ci.yml`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** CI ruft nun die neuen Sanity-Skripte auf
+- **Variante gewählt:** Variante 1 – Skripte direkt im Workflow ausführen
+- **Begründung:** Einheitliche Checks lokal und im CI mit minimalem Overhead
+- **Verworfene Alternativen:** Variante 2 – separater Job; Variante 3 – npm-Skripte
+- **Offene Punkte / Nächste Schritte:** keine
