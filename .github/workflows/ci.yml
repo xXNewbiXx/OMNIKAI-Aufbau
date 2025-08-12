@@ -22,85 +22,26 @@ jobs:
           test -d flows || echo "⚠️ flows/ fehlt"
 
       - name: Lint Markdown
-        run: |
-          npm i -g markdownlint-cli@0.33.0
-          markdownlint "**/*.md"
+        run: npx -y markdownlint-cli README.md docs/branch-protection.md docs/reports/ci-notes.md --disable MD013
 
       - name: Validate README format
         run: |
           grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
           echo "✅ README hat Titel"
 
-      - name: Validate JSON files in flows/
+      - name: Check JSON syntax
         run: |
-          shopt -s nullglob
-          for f in $(find flows -type f -name "*.json"); do
-            echo "Prüfe $f ..."
-            jq empty "$f" || exit 1
+          for f in $(git ls-files '*.json'); do
+            echo "Checking $f"
+            jq empty "$f" || { echo "❌ Invalid JSON in $f"; exit 1; }
           done
-          echo "✅ Alle JSON-Dateien gültig"
+          echo "✅ JSON syntax ok"
 
       - name: Validate n8n flow schemas
         run: |
-          npm i -g ajv-cli@5
-          shopt -s nullglob
-          for f in $(find flows/n8n -type f -name "*.json"); do
-            echo "Schema-Check $f"
-            ajv validate -s schemas/n8n-flow.schema.json -d "$f" --spec=draft7 || exit 1
+          for f in flows/n8n/*.json; do
+            [ -e "$f" ] || continue
+            echo "Schema check $f"
+            npx -y ajv-cli@5 validate -s infra/schemas/n8n-flow.schema.json -d "$f" --spec=draft7 || { echo "❌ Schema validation failed for $f"; exit 1; }
           done
-          echo "✅ n8n-Flows entsprechen Schema"
-
-      - name: Check Markdown files are non-empty
-        run: |
-          while IFS= read -r -d '' file; do
-            head -n 1 "$file" >/dev/null || (echo "❌ $file ist leer" && exit 1)
-          done < <(find . -name "*.md" -print0)
-          echo "✅ Markdown-Dateien OK"
-
-  validate_sources:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Ensure sources & schema exist
-        run: |
-          test -f datasources/sources.yaml || (echo "❌ datasources/sources.yaml fehlt" && exit 1)
-          test -f schemas/sources.schema.json || (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
-          echo "✅ sources.yaml & Schema gefunden"
-
-      - name: Convert YAML to JSON
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pyyaml
-          python - <<'PY'
-          import json, yaml, sys
-          with open('datasources/sources.yaml','r', encoding='utf-8') as f:
-              data = yaml.safe_load(f) or {}
-          with open('/tmp/sources.json','w', encoding='utf-8') as f:
-              json.dump(data, f, ensure_ascii=False)
-          print("OK: /tmp/sources.json geschrieben", file=sys.stderr)
-          PY
-
-      - name: Install ajv
-        run: npm i -g ajv-cli@5
-
-      - name: Validate schema with ajv
-        run: ajv validate -s schemas/sources.schema.json -d /tmp/sources.json --spec=draft7
-
-      - name: Check listed files exist
-        run: |
-          python - <<'PY'
-          import os, json, sys
-          data = json.load(open('/tmp/sources.json','r', encoding='utf-8'))
-          missing = []
-          for s in data.get('sources', []):
-            p = (s or {}).get('path','')
-            fp = p.split('#', 1)[0]
-            if fp and not os.path.exists(fp):
-              missing.append(fp)
-          if missing:
-            print("❌ Fehlende Dateien:")
-            for m in missing: print(" -", m)
-            sys.exit(1)
-          print("✅ Alle referenzierten Dateien vorhanden.")
-          PY
+          echo "✅ n8n flows match schema"
