@@ -82,11 +82,20 @@
 - **Verworfene Alternativen:** vollständige API-Integration
 - **Offene Punkte / Nächste Schritte:** Abschlussbewertung
 
+
 ## Runde 11
-- **Dateien:** `docs/reports/codex-iteration-log.md`
-- **Kurzdiff:** Abschlussbewertung ergänzt
-- **Variante gewählt:** Variante 1 – Bewertung im Log
-- **Begründung:** zentrale Nachvollziehbarkeit
-- **Verworfene Alternativen:** separate REVIEW.md
+- **Dateien:** `TEST.md`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Verbindungstest-Datei angelegt
+- **Variante gewählt:** Variante 1 – einfache Markdown-Nachricht
+- **Begründung:** schneller Nachweis funktionierender Codex-Anbindung
+- **Verworfene Alternativen:** keine
+- **Offene Punkte / Nächste Schritte:** Abschlussreview aktualisieren
+
+## Runde 12
+- **Dateien:** `CODE_OF_CONDUCT.md`, `docs/reports/expert-review.md`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Code of Conduct formatiert, Expert-Review auf 9.5/10 aktualisiert
+- **Variante gewählt:** Variante 1 – knappe, linkbasierte Richtlinie
+- **Begründung:** ausreichend für Projektstart, minimaler Pflegeaufwand
+- **Verworfene Alternativen:** vollständiger Covenant-Text
 - **Finale Bewertung:** 9.5/10
-- **Offene Punkte / Nächste Schritte:** keine – To-Dos abgeschlossen
+- **Offene Punkte / Nächste Schritte:** keine
