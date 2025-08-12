@@ -1,5 +1,5 @@
+{ "name":"prompt_pre_processor_claude_v2","version":1,"nodes":[],"connections":{} }
 
----
 
 ## **`flows/n8n/prompt_pre_processor_claude_v2.json`**
 ```json
