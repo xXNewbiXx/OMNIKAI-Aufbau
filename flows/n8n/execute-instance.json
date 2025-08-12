@@ -1,1 +1,37 @@
-
+{
+  "name": "execute-instance",
+  "nodes": [
+    {
+      "id": "Start",
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "id": "Code",
+      "parameters": {
+        "functionCode": "// TODO: implement action logic"
+      },
+      "name": "Code (placeholder)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "notes": "Pseudo implementation"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Code (placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

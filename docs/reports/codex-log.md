@@ -1,0 +1,50 @@
+# Codex Iterationslog
+
+## Runde 1
+- **Dateien:** `docs/reports/codex-log.md`
+- **Kurzdiff:** Neue Logdatei erstellt
+- **Variante gewählt:** Variante B – Markdown-Liste pro Runde
+- **Begründung:** Lesbar, CI-neutral, leicht erweiterbar
+- **Verworfene Alternativen:** Variante A – Plaintext; Variante C – YAML; Variante D – separate Datei pro Runde
+- **Offene Punkte / Nächste Schritte:** CI-Workflow verschlanken; Prompts schärfen; n8n-Flows validieren; Repo aufräumen
+
+## Runde 2
+- **Dateien:** `.github/workflows/ci.yml`, `docs/reports/codex-log.md`
+- **Kurzdiff:** jq-Installationsschritt entfernt
+- **Variante gewählt:** Variante 1 – jq vorausgesetzt
+- **Begründung:** Image enthält jq, weniger Abhängigkeiten, schnellerer Lauf
+- **Verworfene Alternativen:** Variante 2 – bedingte Installation; Variante 3 – apt-get ohne update; Variante 4 – manueller Download
+- **Offene Punkte / Nächste Schritte:** Prompts schärfen; n8n-Flows validieren; Repo aufräumen
+
+## Runde 3
+- **Dateien:** `prompts/claude/steer.md`, `prompts/gemini/deep-research.md`, `prompts/grok/trend-check.md`, `docs/reports/codex-log.md`
+- **Kurzdiff:** Prompts um Input/Output/Kriterien/Abbruchbedingungen ergänzt
+- **Variante gewählt:** Variante 1 – Markdown-Sektionen
+- **Begründung:** Lesbar, konsistent, ohne spezielle Parser
+- **Verworfene Alternativen:** Variante 2 – Tabellen; Variante 3 – YAML; Variante 4 – JSON-Struktur
+- **Offene Punkte / Nächste Schritte:** n8n-Flows validieren; Repo aufräumen
+
+## Runde 4
+- **Dateien:** `flows/n8n/think-instance.json`, `flows/n8n/execute-instance.json`, `docs/reports/codex-log.md`
+- **Kurzdiff:** n8n-Flow-Skelette mit env-Platzhaltern ergänzt
+- **Variante gewählt:** Variante 1 – Minimaler Start- und Platzhalter-Knoten
+- **Begründung:** Valid JSON, sicher durch ENV, gut erweiterbar
+- **Verworfene Alternativen:** Variante 2 – Voller Flow; Variante 3 – reine Kommentare; Variante 4 – YAML
+- **Offene Punkte / Nächste Schritte:** Repo aufräumen
+
+## Runde 5
+- **Dateien:** `prompt-pre-processor-module.md`, `docs/reports/codex-log.md`
+- **Kurzdiff:** Datei mit kryptischem Namen in kebab-case umbenannt
+- **Variante gewählt:** Variante 2 – Umbenennung via git mv
+- **Begründung:** Erhöht Lesbarkeit, hält Namenskonvention ein
+- **Verworfene Alternativen:** Variante 1 – Löschen; Variante 3 – unverändert lassen; Variante 4 – in Unterordner verschieben
+- **Offene Punkte / Nächste Schritte:** optional weitere Dateinamen angleichen
+
+## Runde 6
+- **Dateien:** `docs/reports/codex-log.md`
+- **Kurzdiff:** Abschlussbewertung und Restideen ergänzt
+- **Variante gewählt:** Variante 1 – Abschlusslog
+- **Begründung:** Sichert Transparenz über finalen Stand
+- **Verworfene Alternativen:** keine
+- **Finale Bewertung:** 9/10
+- **Offene Punkte / Nächste Schritte:** Tests und CI erweitern; weitere Dateinamen harmonisieren

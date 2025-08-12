@@ -1,1 +1,42 @@
-
+{
+  "name": "think-instance",
+  "nodes": [
+    {
+      "id": "Start",
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "id": "Claude",
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "body": "{\"prompt\": \"TODO: dynamic prompt\"}",
+        "headers": {
+          "x-api-key": "={{$env.CLAUDE_API_KEY}}"
+        }
+      },
+      "name": "Claude (placeholder)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "notes": "TODO: replace with official Claude node; use env CLAUDE_API_KEY"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Claude (placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

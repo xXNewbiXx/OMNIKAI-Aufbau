@@ -17,3 +17,9 @@ Robustes, modular skalierbares Multi‑Agenten‑System. Steuer‑KI: Claude. Un
 1. Doku lesen: `/docs/index.md`
 2. Flows importieren (sobald verfügbar)
 3. Prompts anpassen, erste Testläufe
+
+## Beitrag & Verhaltensregeln
+Beiträge sind willkommen! Bitte lies [CONTRIBUTING.md](CONTRIBUTING.md) und beachte den [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Lizenz
+Dieses Projekt steht unter der [MIT-Lizenz](LICENSE.md).

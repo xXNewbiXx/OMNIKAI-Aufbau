@@ -14,11 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install tools (jq)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
       - name: Sanity Check – Ordnerstruktur
         run: |
           echo "✅ CI läuft"
