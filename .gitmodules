@@ -1,0 +1,3 @@
+[submodule "flows/n8n/black-project"]
+	path = flows/n8n/black-project
+	url = https://github.com/xXNewbiXx/omnikai-black-project.git
