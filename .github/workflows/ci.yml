@@ -35,3 +35,5 @@ jobs:
             npx -y ajv-cli@5 validate -s infra/schemas/n8n-flow.schema.json -d "$f" --spec=draft7 || { echo "❌ Schema validation failed for $f"; exit 1; }
           done
           echo "✅ n8n flows match schema"
+      - name: Run pytest
+        run: pytest

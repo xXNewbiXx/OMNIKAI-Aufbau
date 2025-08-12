@@ -19,6 +19,25 @@
       "typeVersion": 1,
       "position": [500, 300],
       "notes": "Returns input with success flag"
+    },
+    {
+      "id": "Output",
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "={{$json.success ? 'ok' : 'error'}}"
+            }
+          ]
+        }
+      },
+      "name": "Format Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [760, 300],
+      "notes": "Formats execution result"
     }
   ],
   "connections": {
@@ -27,6 +46,17 @@
         [
           {
             "node": "Code (placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
             "type": "main",
             "index": 0
           }

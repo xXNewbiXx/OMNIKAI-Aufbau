@@ -33,6 +33,4 @@ Dieses Projekt steht unter der [MIT-Lizenz](LICENSE.md).
 
 ## Next Steps
 
-- Automatisierte Tests ergänzen
-- CI weiter härten
-- n8n-Flows produktiv ausbauen
+- Echte API-Integration und erweiterte Tests

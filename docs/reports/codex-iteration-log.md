@@ -115,3 +115,27 @@
 - **Begründung:** Einheitliche Checks lokal und im CI mit minimalem Overhead
 - **Verworfene Alternativen:** Variante 2 – separater Job; Variante 3 – npm-Skripte
 - **Offene Punkte / Nächste Schritte:** keine
+
+## Runde 15
+- **Dateien:** `tests/test_placeholder.py`, `README.md`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Minimaler Pytest erstellt, README-Next-Steps bereinigt
+- **Variante gewählt:** Variante 1 – Pytest prüft README-Existenz
+- **Begründung:** Schnell, wartungsarm und mit bestehendem CI kompatibel
+- **Verworfene Alternativen:** Variante 2 – komplexer JSON-Test; Variante 3 – Bash-Skript statt Pytest; Variante 4 – keine Tests
+- **Offene Punkte / Nächste Schritte:** CI weiter härten; n8n-Flows produktiv ausbauen
+
+## Runde 16
+- **Dateien:** `.github/workflows/ci.yml`, `README.md`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Pytest in CI integriert, README-Next-Steps reduziert
+- **Variante gewählt:** Variante 1 – Pytest im bestehenden Job
+- **Begründung:** Zusätzlicher Schutz ohne separate Jobs
+- **Verworfene Alternativen:** Variante 2 – eigener CI-Job; Variante 3 – Makefile-Aufruf; Variante 4 – Tests manuell laufen lassen
+- **Offene Punkte / Nächste Schritte:** n8n-Flows produktiv ausbauen
+
+## Runde 17
+- **Dateien:** `flows/n8n/execute-instance.json`, `README.md`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Execute-Flow liefert formatiertes Ergebnis, README-Next-Steps aktualisiert
+- **Variante gewählt:** Variante 1 – Set-Node mit Statusfeld
+- **Begründung:** Einfache Demo ohne Secrets, schema-konform
+- **Verworfene Alternativen:** Variante 2 – HTTP-Request-Placeholder; Variante 3 – Kommentar-Node; Variante 4 – keine Änderung
+- **Offene Punkte / Nächste Schritte:** keine
