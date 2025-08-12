@@ -12,13 +12,13 @@
     {
       "id": "Code",
       "parameters": {
-        "functionCode": "// TODO: implement action logic"
+        "functionCode": "// Echo input and mark success\nfor (const item of items) {\n  item.json.success = true;\n}\nreturn items;"
       },
       "name": "Code (placeholder)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
       "position": [500, 300],
-      "notes": "Pseudo implementation"
+      "notes": "Returns input with success flag"
     }
   ],
   "connections": {

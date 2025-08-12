@@ -21,6 +21,11 @@ jobs:
           test -d prompts || echo "⚠️ prompts/ fehlt"
           test -d flows || echo "⚠️ flows/ fehlt"
 
+      - name: Lint Markdown
+        run: |
+          npm i -g markdownlint-cli@0.33.0
+          markdownlint "**/*.md"
+
       - name: Validate README format
         run: |
           grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
@@ -34,6 +39,16 @@ jobs:
             jq empty "$f" || exit 1
           done
           echo "✅ Alle JSON-Dateien gültig"
+
+      - name: Validate n8n flow schemas
+        run: |
+          npm i -g ajv-cli@5
+          shopt -s nullglob
+          for f in $(find flows/n8n -type f -name "*.json"); do
+            echo "Schema-Check $f"
+            ajv validate -s schemas/n8n-flow.schema.json -d "$f" --spec=draft7 || exit 1
+          done
+          echo "✅ n8n-Flows entsprechen Schema"
 
       - name: Check Markdown files are non-empty
         run: |

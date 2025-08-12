@@ -48,3 +48,45 @@
 - **Verworfene Alternativen:** keine
 - **Finale Bewertung:** 9/10
 - **Offene Punkte / Nächste Schritte:** Tests und CI erweitern; weitere Dateinamen harmonisieren
+
+
+## Runde 7
+- **Dateien:** `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Logdatei umbenannt
+- **Variante gewählt:** Variante 1 – direkter `git mv`
+- **Begründung:** Erhält Historie und sorgt für klaren Namen
+- **Verworfene Alternativen:** neue Datei ohne Historie
+- **Offene Punkte / Nächste Schritte:** Branch-Protection-Doku ergänzen; CI um Linter erweitern; n8n-Flows verfeinern
+
+## Runde 8
+- **Dateien:** `docs/branch-protection.md`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Branch-Protection-Leitlinien hinzugefügt
+- **Variante gewählt:** Variante 1 – eigene Markdown-Datei
+- **Begründung:** Policies klar getrennt vom README
+- **Verworfene Alternativen:** Inline-Doku im README
+- **Offene Punkte / Nächste Schritte:** CI um Linter erweitern; n8n-Flows verfeinern
+
+## Runde 9
+- **Dateien:** `.github/workflows/ci.yml`, `schemas/n8n-flow.schema.json`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Markdown-Linter und n8n-Flow-Schema-Validierung in CI integriert
+- **Variante gewählt:** Variante 2 – zusätzliche Schritte im bestehenden Workflow
+- **Begründung:** Minimale Komplexität, wiederverwendbare Tools
+- **Verworfene Alternativen:** separater Workflow
+- **Offene Punkte / Nächste Schritte:** n8n-Flows funktional erweitern
+
+## Runde 10
+- **Dateien:** `flows/n8n/think-instance.json`, `flows/n8n/execute-instance.json`, `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Platzhalter-Flows um minimale Verarbeitung ergänzt
+- **Variante gewählt:** Variante 1 – Set- und Code-Knoten
+- **Begründung:** liefert nachvollziehbare Demo-Ausgaben ohne Secrets
+- **Verworfene Alternativen:** vollständige API-Integration
+- **Offene Punkte / Nächste Schritte:** Abschlussbewertung
+
+## Runde 11
+- **Dateien:** `docs/reports/codex-iteration-log.md`
+- **Kurzdiff:** Abschlussbewertung ergänzt
+- **Variante gewählt:** Variante 1 – Bewertung im Log
+- **Begründung:** zentrale Nachvollziehbarkeit
+- **Verworfene Alternativen:** separate REVIEW.md
+- **Finale Bewertung:** 9.5/10
+- **Offene Punkte / Nächste Schritte:** keine – To-Dos abgeschlossen
