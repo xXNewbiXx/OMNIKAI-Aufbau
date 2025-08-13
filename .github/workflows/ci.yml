@@ -31,8 +31,9 @@ jobs:
           grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
           echo "✅ README hat Titel"
 
-      - name: Validate JSON files in flows/
+      - name: Validate n8n flow schemas
         run: |
+          set -euo pipefail
           shopt -s nullglob
           for f in $(find flows -type f -name "*.json"); do
             echo "Prüfe $f ..."
