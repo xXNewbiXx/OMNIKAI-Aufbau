@@ -13,8 +13,11 @@ permissions:
   contents: read
 
 jobs:
-  sanity:
+  checks:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [sanity, lint]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,12 +26,28 @@ jobs:
           token: ${{ secrets.GH_PAT_SUBMODULES }}
           persist-credentials: false
 
-      - name: Install tools (jq)
+      - name: Determine submodule cache key
+        id: submodules-sha
+        run: echo "sha=$(git rev-parse HEAD:.gitmodules)" >> $GITHUB_OUTPUT
+
+      - name: Cache submodules
+        uses: actions/cache@v4
+        with:
+          path: |
+            flows/n8n/black-project
+            flows/n8n/n8n-core
+            flows/n8n/workflow-library
+          key: submodules-${{ steps.submodules-sha.outputs.sha }}
+
+      - name: Install tools
         run: |
           sudo apt-get update
           sudo apt-get install -y jq
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
 
       - name: Sanity Check – Ordnerstruktur
+        if: matrix.task == 'sanity'
         run: |
           echo "✅ CI läuft"
           test -d docs || (echo "❌ docs/ fehlt" && exit 1)
@@ -36,6 +55,7 @@ jobs:
           test -d flows || echo "⚠️ flows/ fehlt"
 
       - name: Validate README format
+        if: matrix.task == 'sanity'
         # yamllint disable rule:line-length
         run: |
           grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
@@ -43,6 +63,7 @@ jobs:
         # yamllint enable rule:line-length
 
       - name: Validate JSON files in flows/
+        if: matrix.task == 'sanity'
         run: |
           shopt -s nullglob
           for f in $(find flows -type f -name "*.json"); do
@@ -52,11 +73,42 @@ jobs:
           echo "✅ Alle JSON-Dateien gültig"
 
       - name: Check Markdown files are non-empty
+        if: matrix.task == 'sanity'
         run: |
           while IFS= read -r -d '' file; do
             head -n 1 "$file" >/dev/null || (echo "❌ $file ist leer" && exit 1)
           done < <(find . -name "*.md" -print0)
           echo "✅ Markdown-Dateien OK"
+
+      - name: Validate n8n flow schemas
+        if: matrix.task == 'lint'
+        # yamllint disable rule:line-length
+        run: |
+          shopt -s nullglob
+          for f in $(find flows/n8n -type f -name "*.json"); do
+            jq 'has("nodes") and has("connections")' "$f" >/dev/null || { echo "❌ Schema validation failed for $f"; exit 1; }
+          done
+          echo "✅ n8n flow schemas valid"
+        # yamllint enable rule:line-length
+
+      - name: Validate frontmatter for docs/black-project
+        # yamllint disable rule:line-length
+        if: matrix.task == 'lint' && hashFiles('docs/black-project/**/*.md') != ''
+        run: |
+          python - <<'PY'
+          import sys, pathlib, yaml
+          for p in pathlib.Path('docs/black-project').rglob('*.md'):
+              text = p.read_text(encoding='utf-8')
+              if not text.startswith('---'):
+                  print(f"Missing frontmatter in {p}")
+                  sys.exit(1)
+              end = text.find('\n---', 3)
+              if end == -1:
+                  print(f"Unterminated frontmatter in {p}")
+                  sys.exit(1)
+              yaml.safe_load(text[3:end])
+          PY
+        # yamllint enable rule:line-length
 
   validate_sources:
     runs-on: ubuntu-latest
@@ -68,11 +120,25 @@ jobs:
           token: ${{ secrets.GH_PAT_SUBMODULES }}
           persist-credentials: false
 
+      - name: Determine submodule cache key
+        id: submodules-sha
+        run: echo "sha=$(git rev-parse HEAD:.gitmodules)" >> $GITHUB_OUTPUT
+
+      - name: Cache submodules
+        uses: actions/cache@v4
+        with:
+          path: |
+            flows/n8n/black-project
+            flows/n8n/n8n-core
+            flows/n8n/workflow-library
+          key: submodules-${{ steps.submodules-sha.outputs.sha }}
+
       - name: Ensure sources & schema exist
         # yamllint disable rule:line-length
         run: |
           test -f datasources/sources.yaml || (echo "❌ datasources/sources.yaml fehlt" && exit 1)
-          test -f schemas/sources.schema.json || (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
+          test -f schemas/sources.schema.json || \
+            (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
           echo "✅ sources.yaml & Schema gefunden"
         # yamllint enable rule:line-length
 
@@ -114,3 +180,26 @@ jobs:
             sys.exit(1)
           print("✅ Alle referenzierten Dateien vorhanden.")
           PY
+
+  report_failure:
+    needs:
+      - checks
+      - validate_sources
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # yamllint disable rule:line-length
+          script: |
+            const {owner, repo} = context.repo;
+            const runId = context.runId;
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: `CI failure for ${context.workflow} #${context.runNumber}`,
+              body: `Run logs: https://github.com/${owner}/${repo}/actions/runs/${runId}`,
+              labels: ['ci-failure']
+            });
+          # yamllint enable rule:line-length
