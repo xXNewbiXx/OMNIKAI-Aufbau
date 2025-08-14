@@ -35,7 +35,7 @@ Es ist speziell auf OMNIKAI abgestimmt, um die Analyseergebnisse für maximale P
 ## 2. Integration in OMNIKAI
 
 - **Dateipfad:**  
-  `flows/n8n/prompt_pre_processor_claude_v2.json`
+  `flows/n8n/prompt-pre-processor-claude-v2.json`
 - **Einfügen in n8n:**  
   Vor jedem Claude-Request in Think- oder Execute-Flows.
 

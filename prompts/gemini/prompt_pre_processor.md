@@ -34,7 +34,7 @@ Dieses Modul sitzt vor allen Anfragen an **Gemini** und minimiert Policy-Blockad
 ## 2. Integration in OMNIKAI
 
 - **Dateipfad:**  
-  `flows/n8n/prompt_pre_processor_gemini_v2.json`
+  `flows/n8n/prompt-pre-processor-gemini-v2.json`
 - **Einfügen in n8n:**  
   Vor jedem Gemini-Request in Think- oder Execute-Flows.
 

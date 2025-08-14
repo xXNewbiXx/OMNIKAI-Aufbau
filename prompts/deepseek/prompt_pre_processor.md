@@ -40,7 +40,7 @@ Es kombiniert **umfassende Keyword-Erkennung**, **Synonymisierung**, **Rephrase-
 ## 2. Integration in OMNIKAI
 
 - **Dateipfad:**  
-  `flows/n8n/prompt_pre_processor_deepseek_v2.json`
+  `flows/n8n/prompt-pre-processor-deepseek-v2.json`
 - **Einfügen in n8n:**  
   Vor jedem DeepSeek-Request in Think- oder Execute-Flows.
 
