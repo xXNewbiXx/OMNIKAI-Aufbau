@@ -1,0 +1,72 @@
+---
+name: profit-weekly
+'on':
+  schedule: [{ cron: '0 6 * * *' }]
+  workflow_dispatch:
+jobs:
+  calc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Ensure labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const req = ['profit','pricing','retention','distribution','priority:high'];
+            const existing = await github.paginate(github.rest.issues.listLabelsForRepo, {owner: context.repo.owner, repo: context.repo.repo});
+            const names = existing.map(l => l.name);
+            for (const l of req) {
+              if (!names.includes(l)) {
+                await github.rest.issues.createLabel({owner: context.repo.owner, repo: context.repo.repo, name: l});
+              }
+            }
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install deps
+        run: python -m pip install --upgrade pip pandas numpy jinja2
+      - name: Run profit calc
+        run: |
+          python tools/profit_calc.py \
+            --config profit/config.yaml \
+            --params profit/unit_economics.yaml \
+            --metrics data/metrics.csv \
+            --threshold tools/opindex_threshold.json \
+            --template dashboards/weekly_profit_report.md.gtpl \
+            --out dashboards/weekly_profit_report.md \
+            --json dashboards/weekly_profit_report.json
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-profit-report
+          path: dashboards/weekly_profit_report.*
+      - name: Commit updated dashboard (if changed)
+        run: |
+          git config user.name "omnikai-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add dashboards/weekly_profit_report.*
+          git diff --cached --quiet || git commit -m "chore(profit): update weekly dashboard"
+      - name: Push
+        run: git push || true
+      - name: Create Issue if OPI below threshold
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const thr = JSON.parse(fs.readFileSync('tools/opindex_threshold.json','utf8'));
+            const rpt = JSON.parse(fs.readFileSync('dashboards/weekly_profit_report.json','utf8'));
+            if (rpt.OPI < thr.min_opi || rpt.gross_margin < thr.min_gm || rpt.Payback > thr.max_payback_months) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Profitability action required – OPI ${rpt.OPI.toFixed(2)}`,
+                labels: ['profit','priority:high'],
+                body: `Auto‑Alert:\n\n- OPI: ${rpt.OPI}\n- Gross Margin: ${rpt.gross_margin}\n- Payback (months): ${rpt.Payback}\n\nTop 3 Empfehlungen:\n${rpt.Recos.join('\n')}`
+              });
+            }

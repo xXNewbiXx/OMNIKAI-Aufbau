@@ -1,4 +1,5 @@
 ![CI](https://github.com/xXNewbiXx/OMNIKAI-Aufbau/actions/workflows/ci.yml/badge.svg)
+[![Weekly Profit Report](https://github.com/xXNewbiXx/OMNIKAI-Aufbau/actions/workflows/profit-weekly.yml/badge.svg)](dashboards/weekly_profit_report.md)
 
 # OMNIKAI – Aufbau (Blueprint)
 Robustes, modular skalierbares Multi‑Agenten‑System. Steuer‑KI: Claude. Unterstützend: Gemini (Deep Research), Grok (Trend/Red‑Team). Orchestrierung über zwei gekoppelte n8n‑Flows (*Think* → Struktur, *Execute* → Umsetzung).
