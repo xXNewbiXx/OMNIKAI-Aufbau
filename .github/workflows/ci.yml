@@ -9,14 +9,19 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   sanity:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          persist-credentials: false
 
       - name: Install tools (jq)
         run: |
@@ -58,8 +63,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          persist-credentials: false
 
       - name: Ensure sources & schema exist
         # yamllint disable rule:line-length
