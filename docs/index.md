@@ -8,6 +8,8 @@ Orchestrierung über zwei gekoppelte n8n‑Flows: **Think** (Struktur) → **Exe
 flowchart LR
   A[Inputs: Ideen/Daten] --> B[Flow 1: THINK]
   B --> C[Backlog & Prompts]
-  C --> D[Flow 2: EXECUTE]
+  C --> F[Claude-Flow (external)]
+  F --> D[Flow 2: EXECUTE]
   D --> E[Outputs: Artefakte/Reports/Commits]
   E -->|Feedback| B
+```
