@@ -1,0 +1,6 @@
+currency: EUR
+vat_rate: 0.19
+cost_centers:
+  - marketing
+  - support
+  - infrastructure

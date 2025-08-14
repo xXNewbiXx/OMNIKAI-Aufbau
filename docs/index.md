@@ -11,3 +11,14 @@ flowchart LR
   C --> D[Flow 2: EXECUTE]
   D --> E[Outputs: Artefakte/Reports/Commits]
   E -->|Feedback| B
+```
+
+## Profitability Engine (OPI)
+Die wöchentlichen Auswertungen liegen unter `dashboards/`. Lokal lässt sich der Report mit
+
+```bash
+python tools/profit_calc.py --config profit/config.yaml --params profit/unit_economics.yaml \
+  --metrics data/metrics.csv --threshold tools/opindex_threshold.json \
+  --template dashboards/weekly_profit_report.md.gtpl --out dashboards/weekly_profit_report.md \
+  --json dashboards/weekly_profit_report.json
+```
