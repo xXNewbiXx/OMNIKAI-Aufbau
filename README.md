@@ -17,6 +17,11 @@ Robustes, modular skalierbares Multi‑Agenten‑System. Steuer‑KI: Claude. Un
 
 - **OMNICODEX (Manus‑Paket)** → siehe `docs/packages/omnicodex.md`
 
+### Externes Modul: claude-flow
+
+Der Ordner `external/claude-flow/` enthält die vom Projekt bereitgestellten Flows und Prompts zur Ansteuerung von Claude.
+Details zur Einbindung und zum Update-Prozess stehen in der [Architektur-Dokumentation](infra/architecture.md).
+
 ## Schnellstart
 
 1. Doku lesen: `/docs/index.md`
