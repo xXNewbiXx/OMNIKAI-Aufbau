@@ -1,1 +1,67 @@
-
+{
+  "name": "execute-instance",
+  "nodes": [
+    {
+      "id": "Start",
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "id": "Code",
+      "parameters": {
+        "functionCode": "// Echo input and mark success\nfor (const item of items) {\n  item.json.success = true;\n}\nreturn items;"
+      },
+      "name": "Code (placeholder)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "notes": "Returns input with success flag"
+    },
+    {
+      "id": "Output",
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "={{$json.success ? 'ok' : 'error'}}"
+            }
+          ]
+        }
+      },
+      "name": "Format Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [760, 300],
+      "notes": "Formats execution result"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Code (placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
