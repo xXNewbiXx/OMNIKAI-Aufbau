@@ -30,37 +30,6 @@ jobs:
           test -d prompts || echo "⚠️ prompts/ fehlt"
           test -d flows || echo "⚠️ flows/ fehlt"
 
-name: ci
-'on':
-  push:
-  pull_request:
-  workflow_dispatch:
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-
-jobs:
-  sanity:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          token: ${{ secrets.GH_PAT_SUBMODULES }}
-          persist-credentials: false
-
-      - name: Sanity Check – Ordnerstruktur
-        run: |
-          echo "✅ CI läuft"
-          test -d docs || (echo "❌ docs/ fehlt" && exit 1)
-          test -d prompts || echo "⚠️ prompts/ fehlt"
-          test -d flows || echo "⚠️ flows/ fehlt"
-
       - name: Validate README format
         # yamllint disable rule:line-length
         run: |
@@ -156,7 +125,7 @@ jobs:
 
       - name: Validate n8n flow schemas (if schema & flows exist)
         run: |
-          set -e
+          set -euo pipefail
           SCHEMA="infra/schemas/n8n-flow.schema.json"
           if [ -f "$SCHEMA" ]; then
             shopt -s nullglob
@@ -176,16 +145,49 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
       - name: Set up Python
+        if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
       - name: Install deps (if requirements present)
+        if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
         run: |
           if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest; fi
+
       - name: Run pytest
+        if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
         run: pytest -q
+
+      - name: No tests found
+        if: ${{ !(hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '') }}
+        run: echo "No tests to run."
+
+  report_failure:
+    runs-on: ubuntu-latest
+    needs:
+      - sanity
+      - validate_sources
+      - validate_n8n_flows
+      - tests
+    if: ${{ always() && failure() }}
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `CI failure in ${context.workflow}`,
+              body: `CI run failed: ${runUrl}`,
+              labels: ['ci-failure']
+            });
 
