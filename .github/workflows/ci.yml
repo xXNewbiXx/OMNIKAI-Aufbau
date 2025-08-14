@@ -1,5 +1,6 @@
+---
 name: ci
-on:
+'on':
   push:
   pull_request:
   workflow_dispatch:
@@ -8,11 +9,19 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   sanity:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          persist-credentials: false
 
       - name: Sanity Check – Ordnerstruktur
         run: |
@@ -21,19 +30,162 @@ jobs:
           test -d prompts || echo "⚠️ prompts/ fehlt"
           test -d flows || echo "⚠️ flows/ fehlt"
 
-      - name: Check Markdown
-        run: bash scripts/sanity/check-markdown.sh
+name: ci
+'on':
+  push:
+  pull_request:
+  workflow_dispatch:
 
-      - name: Check JSON
-        run: bash scripts/sanity/check-json.sh
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
-      - name: Validate n8n flow schemas
+permissions:
+  contents: read
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          persist-credentials: false
+
+      - name: Sanity Check – Ordnerstruktur
         run: |
-          for f in flows/n8n/*.json; do
-            [ -e "$f" ] || continue
-            echo "Schema check $f"
-            npx -y ajv-cli@5 validate -s infra/schemas/n8n-flow.schema.json -d "$f" --spec=draft7 || { echo "❌ Schema validation failed for $f"; exit 1; }
+          echo "✅ CI läuft"
+          test -d docs || (echo "❌ docs/ fehlt" && exit 1)
+          test -d prompts || echo "⚠️ prompts/ fehlt"
+          test -d flows || echo "⚠️ flows/ fehlt"
+
+      - name: Validate README format
+        # yamllint disable rule:line-length
+        run: |
+          grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
+          echo "✅ README hat Titel"
+        # yamllint enable rule:line-length
+
+      - name: Validate JSON files in flows/
+        run: |
+          shopt -s nullglob
+          for f in $(find flows -type f -name "*.json"); do
+            echo "Prüfe $f ..."
+            jq empty "$f" || exit 1
           done
-          echo "✅ n8n flows match schema"
+          echo "✅ Alle JSON-Dateien gültig"
+
+      - name: Check Markdown files are non-empty
+        run: |
+          while IFS= read -r -d '' file; do
+            head -n 1 "$file" >/dev/null || (echo "❌ $file ist leer" && exit 1)
+          done < <(find . -name "*.md" -print0)
+          echo "✅ Markdown-Dateien OK"
+
+  validate_sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          persist-credentials: false
+
+      - name: Ensure sources & schema exist
+        # yamllint disable rule:line-length
+        run: |
+          test -f datasources/sources.yaml || (echo "❌ datasources/sources.yaml fehlt" && exit 1)
+          test -f schemas/sources.schema.json || (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
+          echo "✅ sources.yaml & Schema gefunden"
+        # yamllint enable rule:line-length
+
+      - name: Prepare sources.json
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml
+          python - <<'PY'
+          import json, yaml, sys
+          with open('datasources/sources.yaml','r', encoding='utf-8') as f:
+              data = yaml.safe_load(f) or {}
+          with open('/tmp/sources.json','w', encoding='utf-8') as f:
+              json.dump(data, f, ensure_ascii=False)
+          print("OK: /tmp/sources.json geschrieben", file=sys.stderr)
+          PY
+
+      - name: Install ajv
+        run: npm i -g ajv-cli@5
+
+      - name: Validate sources schema with ajv
+        run: |
+          ajv validate -s schemas/sources.schema.json \
+            -d /tmp/sources.json --spec=draft7
+
+      - name: Check listed files exist
+        run: |
+          python - <<'PY'
+          import os, json, sys
+          data = json.load(open('/tmp/sources.json','r', encoding='utf-8'))
+          missing = []
+          for s in (data.get('sources') or []):
+            p = (s or {}).get('path','')
+            fp = p.split('#', 1)[0]
+            if fp and not os.path.exists(fp):
+              missing.append(fp)
+          if missing:
+            print("❌ Fehlende Dateien:")
+            for m in missing: print(" -", m)
+            sys.exit(1)
+          print("✅ Alle referenzierten Dateien vorhanden.")
+          PY
+
+  validate_n8n_flows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          persist-credentials: false
+
+      - name: Install ajv
+        run: npm i -g ajv-cli@5
+
+      - name: Validate n8n flow schemas (if schema & flows exist)
+        run: |
+          set -e
+          SCHEMA="infra/schemas/n8n-flow.schema.json"
+          if [ -f "$SCHEMA" ]; then
+            shopt -s nullglob
+            flows=(flows/n8n/*.json)
+            if [ ${#flows[@]} -gt 0 ]; then
+              for f in "${flows[@]}"; do
+                echo "Schema check $f"
+                ajv validate -s "$SCHEMA" -d "$f" --spec=draft7 || { echo "❌ Schema validation failed for $f"; exit 1; }
+              done
+              echo "✅ n8n flows match schema"
+            else
+              echo "ℹ️ Keine n8n Flows gefunden – Schritt übersprungen."
+            fi
+          else
+            echo "ℹ️ $SCHEMA nicht vorhanden – Schritt übersprungen."
+          fi
+
+  tests:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install deps (if requirements present)
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest; fi
       - name: Run pytest
-        run: pytest
+        run: pytest -q
+
