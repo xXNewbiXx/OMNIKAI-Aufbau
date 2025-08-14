@@ -1,0 +1,3 @@
+# Code owners for critical paths
+/external/claude-flow/ @xXNewbiXx
+/prompts/claude/claude-flow/ @xXNewbiXx
