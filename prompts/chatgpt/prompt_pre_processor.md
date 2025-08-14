@@ -34,7 +34,7 @@ Es kombiniert **umfassende Keyword-Erkennung**, **Synonymisierung**, **Rephrase-
 ## 2. Integration in OMNIKAI
 
 - **Dateipfad:**  
-  `flows/n8n/prompt_pre_processor_chatgpt_v2.json`
+  `flows/n8n/prompt-pre-processor-chatgpt-v2.json`
 - **Einfügen in n8n:**  
   Vor jedem ChatGPT-Request in Think- oder Execute-Flows.
 
