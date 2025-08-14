@@ -1,3 +1,4 @@
+---
 name: ci
 'on':
   push:
@@ -13,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Install tools (jq)
         run: |
@@ -27,9 +31,11 @@ jobs:
           test -d flows || echo "⚠️ flows/ fehlt"
 
       - name: Validate README format
+        # yamllint disable rule:line-length
         run: |
           grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
           echo "✅ README hat Titel"
+        # yamllint enable rule:line-length
 
       - name: Validate JSON files in flows/
         run: |
@@ -51,12 +57,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Ensure sources & schema exist
+        # yamllint disable rule:line-length
         run: |
           test -f datasources/sources.yaml || (echo "❌ datasources/sources.yaml fehlt" && exit 1)
           test -f schemas/sources.schema.json || (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
           echo "✅ sources.yaml & Schema gefunden"
+        # yamllint enable rule:line-length
 
       - name: Convert YAML to JSON
         run: |
@@ -75,7 +86,9 @@ jobs:
         run: npm i -g ajv-cli@5
 
       - name: Validate schema with ajv
-        run: ajv validate -s schemas/sources.schema.json -d /tmp/sources.json --spec=draft7
+        run: |
+          ajv validate -s schemas/sources.schema.json \
+            -d /tmp/sources.json --spec=draft7
 
       - name: Check listed files exist
         run: |
