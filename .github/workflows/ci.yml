@@ -42,8 +42,9 @@ jobs:
           echo "✅ README hat Titel"
         # yamllint enable rule:line-length
 
-      - name: Validate JSON files in flows/
+      - name: Validate n8n flow schemas
         run: |
+          set -euo pipefail
           shopt -s nullglob
           for f in $(find flows -type f -name "*.json"); do
             echo "Prüfe $f ..."
