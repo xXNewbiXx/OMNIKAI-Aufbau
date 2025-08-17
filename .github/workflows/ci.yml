@@ -54,6 +54,7 @@ jobs:
           echo "✅ Markdown-Dateien OK"
 
   validate_sources:
+    if: ${{ hashFiles('datasources/sources.yaml') != '' && hashFiles('schemas/sources.schema.json') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -190,4 +191,3 @@ jobs:
               body: `CI run failed: ${runUrl}`,
               labels: ['ci-failure']
             });
-
