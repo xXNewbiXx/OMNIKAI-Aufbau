@@ -8,3 +8,7 @@
 [submodule "flows/n8n/workflow-library"]
 	path = flows/n8n/workflow-library
 	url = https://github.com/enescingoz/awesome-n8n-templates.git
+[submodule "external/claude-flow"]
+	path = external/claude-flow
+	url = https://github.com/ruvnet/claude-flow
+	branch = main
