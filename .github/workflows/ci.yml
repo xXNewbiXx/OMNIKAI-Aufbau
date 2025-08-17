@@ -13,6 +13,16 @@ permissions:
   contents: read
 
 jobs:
+  always-success:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - name: Bootstrap OK
+        run: echo "✅ Dummy check passed"
   sanity:
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +64,7 @@ jobs:
           echo "✅ Markdown-Dateien OK"
 
   validate_sources:
-    if: ${{ hashFiles('datasources/sources.yaml') != '' && hashFiles('schemas/sources.schema.json') != '' }}
+    if: ${{ hashFiles('datasources/sources.yaml', 'schemas/sources.schema.json') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -153,22 +163,22 @@ jobs:
           submodules: recursive
 
       - name: Set up Python
-        if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
+        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') != '' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
       - name: Install deps (if requirements present)
-        if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
+        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') != '' }}
         run: |
           if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest; fi
 
       - name: Run pytest
-        if: ${{ hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '' }}
+        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') != '' }}
         run: pytest -q
 
       - name: No tests found
-        if: ${{ !(hashFiles('tests/**') != '' || hashFiles('pytest.ini') != '' || hashFiles('pyproject.toml') != '' || hashFiles('requirements.txt') != '') }}
+        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') == '' }}
         run: echo "No tests to run."
 
   report_failure:
