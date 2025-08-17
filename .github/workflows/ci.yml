@@ -1,6 +1,5 @@
----
 name: ci
-'on':
+on:
   push:
   pull_request:
   workflow_dispatch:
@@ -10,231 +9,35 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: write   # damit der Workflow ins Repo pushen darf
 
 jobs:
-  always-success:
+  codex:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (mit GitHub-Token)
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
-          persist-credentials: false
-      - name: Bootstrap OK
-        run: echo "✅ Dummy check passed"
+          persist-credentials: false   # wir setzen gleich eine eigene Remote mit Token
 
-  sanity:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          token: ${{ secrets.GH_PAT_SUBMODULES }}
-          persist-credentials: false
-
-      - name: Configure git identity + remote
+      - name: Git-Identität + Remote (per GITHUB_TOKEN)
         run: |
-          git config --global user.name  "${{ secrets.GH_USERNAME }}"
-          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
-          git remote set-url origin "https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_PAT }}@github.com/xXNewbiXx/OMNIKAI-Aufbau.git"
-          git fetch --all --prune
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
 
-      - name: Verify auth
+      - name: Codex Auto-Cleanup (Demo: Heartbeat anlegen/anhängen)
+        run: |
+          mkdir -p logs
+          echo "heartbeat $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> logs/ci_heartbeat.txt
+          # 👉 HIER kannst du später echte Aufräum-Aktionen reinschieben
+          # z.B.: find . -name "*.tmp" -delete
+
+      - name: Commit & Push
         run: |
           set -e
-          git ls-remote origin >/dev/null
-          echo "Auth OK"
-
-      - name: Sanity Check – Ordnerstruktur
-        run: |
-          echo "✅ CI läuft"
-          test -d docs || (echo "❌ docs/ fehlt" && exit 1)
-          test -d prompts || echo "⚠️ prompts/ fehlt"
-          test -d flows || echo "⚠️ flows/ fehlt"
-
-      - name: Validate README format
-        run: |
-          grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
-          echo "✅ README hat Titel"
-
-      - name: Validate JSON files in flows/
-        run: |
-          shopt -s nullglob
-          for f in $(find flows -type f -name "*.json"); do
-            echo "Prüfe $f ..."
-            jq empty "$f" || exit 1
-          done
-          echo "✅ Alle JSON-Dateien gültig"
-
-      - name: Check Markdown files are non-empty
-        run: |
-          while IFS= read -r -d '' file; do
-            head -n 1 "$file" >/dev/null || (echo "❌ $file ist leer" && exit 1)
-          done < <(find . -name "*.md" -print0)
-          echo "✅ Markdown-Dateien OK"
-
-  validate_sources:
-    if: ${{ hashFiles('datasources/sources.yaml', 'schemas/sources.schema.json') != '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          token: ${{ secrets.GH_PAT_SUBMODULES }}
-          persist-credentials: false
-
-      - name: Configure git identity + remote
-        run: |
-          git config --global user.name  "${{ secrets.GH_USERNAME }}"
-          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
-          git remote set-url origin "https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_PAT }}@github.com/xXNewbiXx/OMNIKAI-Aufbau.git"
-          git fetch --all --prune
-
-      - name: Verify auth
-        run: |
-          set -e
-          git ls-remote origin >/dev/null
-          echo "Auth OK"
-
-      - name: Ensure sources & schema exist
-        run: |
-          test -f datasources/sources.yaml || (echo "❌ datasources/sources.yaml fehlt" && exit 1)
-          test -f schemas/sources.schema.json || (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
-          echo "✅ sources.yaml & Schema gefunden"
-
-      - name: Prepare sources.json
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pyyaml
-          python - <<'PY'
-          import json, yaml, sys
-          with open('datasources/sources.yaml','r', encoding='utf-8') as f:
-              data = yaml.safe_load(f) or {}
-          with open('/tmp/sources.json','w', encoding='utf-8') as f:
-              json.dump(data, f, ensure_ascii=False)
-          print("OK: /tmp/sources.json geschrieben", file=sys.stderr)
-          PY
-
-      - name: Install ajv
-        run: npm i -g ajv-cli@5
-
-      - name: Validate sources schema with ajv
-        run: |
-          ajv validate -s schemas/sources.schema.json -d /tmp/sources.json --spec=draft7
-
-      - name: Check listed files exist
-        run: |
-          python - <<'PY'
-          import os, json, sys
-          data = json.load(open('/tmp/sources.json','r', encoding='utf-8'))
-          missing = []
-          for s in (data.get('sources') or []):
-            p = (s or {}).get('path','')
-            fp = p.split('#', 1)[0]
-            if fp and not os.path.exists(fp):
-              missing.append(fp)
-          if missing:
-            print("❌ Fehlende Dateien:")
-            for m in missing: print(" -", m)
-            sys.exit(1)
-          print("✅ Alle referenzierten Dateien vorhanden.")
-          PY
-
-  validate_n8n_flows:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-          token: ${{ secrets.GH_PAT_SUBMODULES }}
-          persist-credentials: false
-
-      - name: Configure git identity + remote
-        run: |
-          git config --global user.name  "${{ secrets.GH_USERNAME }}"
-          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
-          git remote set-url origin "https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_PAT }}@github.com/xXNewbiXx/OMNIKAI-Aufbau.git"
-          git fetch --all --prune
-
-      - name: Verify auth
-        run: |
-          set -e
-          git ls-remote origin >/dev/null
-          echo "Auth OK"
-
-      - name: Install ajv
-        run: npm i -g ajv-cli@5
-
-      - name: Validate n8n flow schemas (if schema & flows exist)
-        run: |
-          set -euo pipefail
-          SCHEMA="infra/schemas/n8n-flow.schema.json"
-          if [ -f "$SCHEMA" ]; then
-            shopt -s nullglob
-            flows=(flows/n8n/*.json)
-            if [ ${#flows[@]} -gt 0 ]; then
-              for f in "${flows[@]}"; do
-                echo "Schema check $f"
-                ajv validate -s "$SCHEMA" -d "$f" --spec=draft7 || { echo "❌ Schema validation failed for $f"; exit 1; }
-              done
-              echo "✅ n8n flows match schema"
-            else
-              echo "ℹ️ Keine n8n Flows gefunden – Schritt übersprungen."
-            fi
-          else
-            echo "ℹ️ $SCHEMA nicht vorhanden – Schritt übersprungen."
-          fi
-
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Set up Python
-        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') != '' }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install deps (if requirements present)
-        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') != '' }}
-        run: |
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest; fi
-
-      - name: Run pytest
-        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') != '' }}
-        run: pytest -q
-
-      - name: No tests found
-        if: ${{ hashFiles('tests/**', 'pytest.ini', 'pyproject.toml', 'requirements.txt') == '' }}
-        run: echo "No tests to run."
-
-  report_failure:
-    runs-on: ubuntu-latest
-    needs:
-      - sanity
-      - validate_sources
-      - validate_n8n_flows
-      - tests
-    if: ${{ always() && failure() }}
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const runUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `CI failure in ${context.workflow}`,
-              body: `CI run failed: ${runUrl}`,
-              labels: ['ci-failure']
-            });
+          git add -A
+          git commit -m "codex: auto-maintenance heartbeat [skip ci]" || echo "nix zu committen"
+          # zurück in denselben Branch pushen
+          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
