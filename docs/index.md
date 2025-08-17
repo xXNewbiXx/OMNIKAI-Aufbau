@@ -1,6 +1,6 @@
 # OMNIKAI – Projektüberblick
 
-OMNIKAI ist ein modularer Multi‑Agenten‑Stack. Steuer‑KI: **Claude**. Unterstützend: **Gemini** (Deep Research) und **Grok** (Red‑Team/Trendcheck).  
+OMNIKAI ist ein modularer Multi‑Agenten‑Stack. Steuer‑KI: **Claude**. Unterstützend: **Gemini** (Deep Research) und **Grok** (Red‑Team/Trendcheck).
 Orchestrierung über zwei gekoppelte n8n‑Flows: **Think** (Struktur) → **Execute** (Umsetzung).
 
 ## Architektur
@@ -8,6 +8,11 @@ Orchestrierung über zwei gekoppelte n8n‑Flows: **Think** (Struktur) → **Exe
 flowchart LR
   A[Inputs: Ideen/Daten] --> B[Flow 1: THINK]
   B --> C[Backlog & Prompts]
-  C --> D[Flow 2: EXECUTE]
+  C --> CF[Claude-Flow (external)]
+  CF --> D[Flow 2: EXECUTE]
   D --> E[Outputs: Artefakte/Reports/Commits]
   E -->|Feedback| B
+```
+
+Das externe Modul **Claude-Flow** liefert wiederverwendbare Prompt- und Code-Bausteine für den `EXECUTE`-Flow. Aktualisierung über `bash scripts/update_submodules.sh`.
+
