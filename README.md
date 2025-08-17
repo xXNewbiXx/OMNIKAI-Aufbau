@@ -17,6 +17,10 @@ Robustes, modular skalierbares Multi‑Agenten‑System. Steuer‑KI: Claude. Un
 
 - **OMNICODEX (Manus‑Paket)** → siehe `docs/packages/omnicodex.md`
 
+## External Modules
+
+- [Claude-Flow](external/claude-flow/) – verwaltete Flows und Prompts für Claude. Aktualisierung via `bash scripts/update_submodules.sh`.
+
 ## Schnellstart
 
 1. Doku lesen: `/docs/index.md`
