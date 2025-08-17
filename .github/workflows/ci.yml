@@ -10,7 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
   always-success:
@@ -23,6 +25,7 @@ jobs:
           persist-credentials: false
       - name: Bootstrap OK
         run: echo "✅ Dummy check passed"
+
   sanity:
     runs-on: ubuntu-latest
     steps:
@@ -33,6 +36,19 @@ jobs:
           token: ${{ secrets.GH_PAT_SUBMODULES }}
           persist-credentials: false
 
+      - name: Configure git identity + remote
+        run: |
+          git config --global user.name  "${{ secrets.GH_USERNAME }}"
+          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git remote set-url origin "https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_PAT }}@github.com/xXNewbiXx/OMNIKAI-Aufbau.git"
+          git fetch --all --prune
+
+      - name: Verify auth
+        run: |
+          set -e
+          git ls-remote origin >/dev/null
+          echo "Auth OK"
+
       - name: Sanity Check – Ordnerstruktur
         run: |
           echo "✅ CI läuft"
@@ -41,11 +57,9 @@ jobs:
           test -d flows || echo "⚠️ flows/ fehlt"
 
       - name: Validate README format
-        # yamllint disable rule:line-length
         run: |
           grep -q "^# " README.md || (echo "❌ README hat keinen Titel" && exit 1)
           echo "✅ README hat Titel"
-        # yamllint enable rule:line-length
 
       - name: Validate JSON files in flows/
         run: |
@@ -74,13 +88,24 @@ jobs:
           token: ${{ secrets.GH_PAT_SUBMODULES }}
           persist-credentials: false
 
+      - name: Configure git identity + remote
+        run: |
+          git config --global user.name  "${{ secrets.GH_USERNAME }}"
+          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git remote set-url origin "https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_PAT }}@github.com/xXNewbiXx/OMNIKAI-Aufbau.git"
+          git fetch --all --prune
+
+      - name: Verify auth
+        run: |
+          set -e
+          git ls-remote origin >/dev/null
+          echo "Auth OK"
+
       - name: Ensure sources & schema exist
-        # yamllint disable rule:line-length
         run: |
           test -f datasources/sources.yaml || (echo "❌ datasources/sources.yaml fehlt" && exit 1)
           test -f schemas/sources.schema.json || (echo "❌ schemas/sources.schema.json fehlt" && exit 1)
           echo "✅ sources.yaml & Schema gefunden"
-        # yamllint enable rule:line-length
 
       - name: Prepare sources.json
         run: |
@@ -100,8 +125,7 @@ jobs:
 
       - name: Validate sources schema with ajv
         run: |
-          ajv validate -s schemas/sources.schema.json \
-            -d /tmp/sources.json --spec=draft7
+          ajv validate -s schemas/sources.schema.json -d /tmp/sources.json --spec=draft7
 
       - name: Check listed files exist
         run: |
@@ -130,6 +154,19 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GH_PAT_SUBMODULES }}
           persist-credentials: false
+
+      - name: Configure git identity + remote
+        run: |
+          git config --global user.name  "${{ secrets.GH_USERNAME }}"
+          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git remote set-url origin "https://${{ secrets.GH_USERNAME }}:${{ secrets.GH_PAT }}@github.com/xXNewbiXx/OMNIKAI-Aufbau.git"
+          git fetch --all --prune
+
+      - name: Verify auth
+        run: |
+          set -e
+          git ls-remote origin >/dev/null
+          echo "Auth OK"
 
       - name: Install ajv
         run: npm i -g ajv-cli@5
