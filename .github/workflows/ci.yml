@@ -1,6 +1,5 @@
----
 name: ci
-'on':
+on:
   push:
   pull_request:
   workflow_dispatch:
@@ -29,9 +28,15 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
 
-      - name: Update submodules
+      # --- optional/warn-only: Submodules aktualisieren, ohne den Build zu brechen
+      - name: Update submodules (warn-only)
         run: |
-          ./scripts/update_submodules.sh || echo "warn: submodules not updated"
+          set +e
+          if [ -x ./scripts/update_submodules.sh ]; then
+            ./scripts/update_submodules.sh || echo "⚠ submodule update warnte"
+          else
+            GIT_TERMINAL_PROMPT=0 git submodule update --init --recursive || echo "⚠ submodule update warnte"
+          fi
 
       - name: Codex Auto-Cleanup (Demo: Heartbeat anlegen/anhängen)
         run: |
@@ -40,16 +45,28 @@ jobs:
           # 👉 HIER kannst du später echte Aufräum-Aktionen reinschieben
           # z.B.: find . -name "*.tmp" -delete
 
-      - name: Validate n8n flow schemas
+      # --- optional: n8n-Flow-Validierung (nur wenn Skript/Ordner existieren)
+      - name: Validate n8n flow schemas (optional)
         run: |
-          scripts/sanity/check-json.sh flows/n8n
+          if [ -x scripts/sanity/check-json.sh ] && [ -d flows/n8n ]; then
+            scripts/sanity/check-json.sh flows/n8n || exit 1
+          else
+            echo "ℹ️ keine n8n-Validierung (Skript/Ordner fehlt)"
+          fi
 
-      - name: Run tests
+      # --- optional: Tests (nur wenn tests/ existiert)
+      - name: Run tests (optional)
         run: |
           if [ -d tests ]; then
+            python -m pip install --upgrade pip >/dev/null 2>&1 || true
+            if [ -f requirements.txt ]; then
+              pip install -r requirements.txt
+            else
+              pip install pytest
+            fi
             pytest tests -q
           else
-            echo "no tests"
+            echo "ℹ️ keine Tests gefunden"
           fi
 
       - name: Commit & Push
@@ -60,6 +77,7 @@ jobs:
           # zurück in denselben Branch pushen
           git push origin "HEAD:${GITHUB_REF#refs/heads/}"
 
+      # --- optional: Issue anlegen, falls Job rot ist
       - name: Create issue on failure
         if: failure()
         uses: actions/github-script@v7
