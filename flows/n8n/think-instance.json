@@ -7,7 +7,10 @@
       "name": "Start",
       "type": "n8n-nodes-base.start",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "id": "Claude",
@@ -22,7 +25,10 @@
       "name": "Claude (placeholder)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "notes": "TODO: replace with official Claude node; use env CLAUDE_API_KEY"
     },
     {
@@ -41,7 +47,10 @@
       "name": "Format Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [760, 300]
+      "position": [
+        760,
+        300
+      ]
     }
   ],
   "connections": {

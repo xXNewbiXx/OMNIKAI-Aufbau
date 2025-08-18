@@ -1,5 +1,6 @@
+---
 name: ci
-on:
+'on':
   push:
   pull_request:
   workflow_dispatch:
@@ -48,7 +49,8 @@ jobs:
       # --- optional: n8n-Flow-Validierung (nur wenn Skript/Ordner existieren)
       - name: Validate n8n flow schemas (optional)
         run: |
-          if [ -x scripts/sanity/check-json.sh ] && [ -d flows/n8n ]; then
+          if [ -x scripts/sanity/clean-json.sh ] && [ -x scripts/sanity/check-json.sh ] && [ -d flows/n8n ]; then
+            scripts/sanity/clean-json.sh flows/n8n
             scripts/sanity/check-json.sh flows/n8n || exit 1
           else
             echo "ℹ️ keine n8n-Validierung (Skript/Ordner fehlt)"
