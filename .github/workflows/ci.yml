@@ -18,15 +18,15 @@ jobs:
   codex:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (mit Token für Submodule)
+      # --- Checkout: OHNE Submodule (Fehlerquelle entfernen)
+      - name: Checkout (ohne Submodule)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: recursive
-          # funktioniert auch, wenn das Secret leer ist – dann nutzt checkout GITHUB_TOKEN
-          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          submodules: false          # ⟵ vorher: recursive (hat Fehler verursacht)
           persist-credentials: false
 
+      # --- Token bestimmen (PAT bevorzugt, sonst GITHUB_TOKEN)
       - name: Token wählen (GH_PAT > GITHUB_TOKEN)
         id: tok
         env:
@@ -42,6 +42,7 @@ jobs:
           fi
           echo "🔑 Verwende: $(sed -n 's/^kind=//p' $GITHUB_OUTPUT)"
 
+      # --- Git-Identität & Remote mit Token setzen
       - name: Git-Identität & Remote setzen
         env:
           TOKEN: ${{ steps.tok.outputs.token }}
@@ -52,24 +53,37 @@ jobs:
           git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
           git remote -v
 
-      # Kein if: secrets …  -> stattdessen im Skript skippen, wenn Token leer ist
-      - name: Submodule via HTTPS (skip wenn kein Token)
+      # --- Submodule-Update "best effort" (skip, wenn kein Token / kein Bedarf)
+      - name: Submodules aktualisieren (warn-only)
         env:
           GH_PAT_SUBMODULES: ${{ secrets.GH_PAT_SUBMODULES }}
         run: |
+          set +e
           if [ -n "$GH_PAT_SUBMODULES" ]; then
+            # HTTPS-Rewrite für alle GitHub-URLs mit PAT
             git config --global url."https://x-access-token:${GH_PAT_SUBMODULES}@github.com/".insteadOf "https://github.com/"
-            git submodule sync --recursive
-            git submodule update --init --recursive --remote || true
-          else
-            echo "ℹ️  kein GH_PAT_SUBMODULES gesetzt – Submodule-Rewrite übersprungen"
           fi
+          git submodule sync --recursive || echo "⚠ submodule sync warnte"
+          # KEINE Rekursion erzwingen, um nested-Submodule-Fehler zu vermeiden
+          if [ -f .gitmodules ]; then
+            # Top-Level Submodule initialisieren/aktualisieren
+            while read -r path; do
+              [ -n "$path" ] || continue
+              echo "➡ update submodule: $path"
+              GIT_TERMINAL_PROMPT=0 git submodule update --init "$path" || echo "⚠ update warnte: $path"
+            done < <(git config -f .gitmodules --get-regexp 'submodule\..*\.path' | awk '{print $2}')
+          else
+            echo "ℹ️ keine .gitmodules gefunden – übersprungen"
+          fi
+          set -e
 
+      # --- Heartbeat / Maintenance
       - name: Heartbeat / Maintenance
         run: |
           mkdir -p logs
           echo "heartbeat $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> logs/ci_heartbeat.txt
 
+      # --- n8n-Validation (optional)
       - name: Validate n8n flows (optional)
         run: |
           if [ -x scripts/sanity/clean-json.sh ] && [ -x scripts/sanity/check-json.sh ] && [ -d flows/n8n ]; then
@@ -79,6 +93,7 @@ jobs:
             echo "ℹ️  n8n-Validation übersprungen"
           fi
 
+      # --- Tests (optional)
       - name: Tests (optional)
         run: |
           if [ -d tests ]; then
@@ -89,7 +104,8 @@ jobs:
             echo "ℹ️  keine Tests gefunden"
           fi
 
-      - name: Commit & Push in neuen Branch (schont main)
+      # --- Commit & Push in neuen Branch (kein Direktpush auf main)
+      - name: Commit & Push in neuen Branch
         id: pushtry
         env:
           RUN_ID: ${{ github.run_id }}
@@ -106,10 +122,11 @@ jobs:
             echo "ok=false" >> $GITHUB_OUTPUT
             exit 1
           else
-            echo "ok=true"  >> $GITHUB_OUTPUT
+            echo "ok=true"   >> $GITHUB_OUTPUT
             echo "branch=$BR" >> $GITHUB_OUTPUT
           fi
 
+      # --- Optionale PR zu main
       - name: PR zu main öffnen (optional)
         if: steps.pushtry.outputs.ok == 'true'
         env:
@@ -127,6 +144,7 @@ jobs:
                         --arg body "Automatischer CI-Heartbeat." \
                         '{title:$t, head:$h, base:$b, body:$body}')"
 
+      # --- Issue bei Fehler
       - name: Issue bei Fehler anlegen
         if: failure()
         uses: actions/github-script@v7
