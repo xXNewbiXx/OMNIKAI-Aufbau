@@ -10,77 +10,120 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write   # damit der Workflow ins Repo pushen darf
+  contents: write
+  pull-requests: write
+  issues: write
 
 jobs:
   codex:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (mit GitHub-Token)
+      - name: Checkout (mit Token für Submodule)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
-          persist-credentials: false   # wir setzen gleich eine eigene Remote mit Token
+          # Falls private Submodule: Secret setzen. Wenn leer, nutzt checkout automatisch GITHUB_TOKEN.
+          token: ${{ secrets.GH_PAT_SUBMODULES }}
+          persist-credentials: false
 
-      - name: Git-Identität + Remote (per GITHUB_TOKEN)
+      - name: Token wählen (GH_PAT > GITHUB_TOKEN)
+        id: tok
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          git config --global user.name  "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
-
-      # --- optional/warn-only: Submodules aktualisieren, ohne den Build zu brechen
-      - name: Update submodules (warn-only)
-        run: |
-          set +e
-          if [ -x ./scripts/update_submodules.sh ]; then
-            ./scripts/update_submodules.sh || echo "⚠ submodule update warnte"
+          if [ -n "$GH_PAT" ]; then
+            echo "token=$GH_PAT" >> $GITHUB_OUTPUT
+            echo "kind=GH_PAT"   >> $GITHUB_OUTPUT
           else
-            GIT_TERMINAL_PROMPT=0 git submodule update --init --recursive || echo "⚠ submodule update warnte"
+            echo "token=$GITHUB_TOKEN" >> $GITHUB_OUTPUT
+            echo "kind=GITHUB_TOKEN"    >> $GITHUB_OUTPUT
           fi
+          echo "🔑 Verwende: $(sed -n 's/^kind=//p' $GITHUB_OUTPUT)"
 
-      - name: Codex Auto-Cleanup (Demo: Heartbeat anlegen/anhängen)
+      - name: Git-Identität & Remote setzen
+        env:
+          TOKEN: ${{ steps.tok.outputs.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          git config --global user.name  "${GH_BOT_NAME:-codex-bot}"
+          git config --global user.email "${GH_BOT_EMAIL:-codex-bot@users.noreply.github.com}"
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
+          git remote -v
+
+      - name: (Optional) Submodule via HTTPS erzwingen
+        if: ${{ secrets.GH_PAT_SUBMODULES != '' }}
+        env:
+          GH_PAT_SUBMODULES: ${{ secrets.GH_PAT_SUBMODULES }}
+        run: |
+          git config --global url."https://x-access-token:${GH_PAT_SUBMODULES}@github.com/".insteadOf "https://github.com/"
+          git submodule sync --recursive
+          git submodule update --init --recursive --remote || true
+
+      - name: Heartbeat / Maintenance
         run: |
           mkdir -p logs
           echo "heartbeat $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> logs/ci_heartbeat.txt
-          # 👉 HIER kannst du später echte Aufräum-Aktionen reinschieben
-          # z.B.: find . -name "*.tmp" -delete
 
-      # --- optional: n8n-Flow-Validierung (nur wenn Skript/Ordner existieren)
-      - name: Validate n8n flow schemas (optional)
+      - name: Validate n8n flows (optional)
         run: |
           if [ -x scripts/sanity/clean-json.sh ] && [ -x scripts/sanity/check-json.sh ] && [ -d flows/n8n ]; then
             scripts/sanity/clean-json.sh flows/n8n
-            scripts/sanity/check-json.sh flows/n8n || exit 1
+            scripts/sanity/check-json.sh  flows/n8n
           else
-            echo "ℹ️ keine n8n-Validierung (Skript/Ordner fehlt)"
+            echo "ℹ️  n8n-Validation übersprungen"
           fi
 
-      # --- optional: Tests (nur wenn tests/ existiert)
-      - name: Run tests (optional)
+      - name: Tests (optional)
         run: |
           if [ -d tests ]; then
             python -m pip install --upgrade pip >/dev/null 2>&1 || true
-            if [ -f requirements.txt ]; then
-              pip install -r requirements.txt
-            else
-              pip install pytest
-            fi
-            pytest tests -q
+            if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest; fi
+            pytest -q
           else
-            echo "ℹ️ keine Tests gefunden"
+            echo "ℹ️  keine Tests gefunden"
           fi
 
-      - name: Commit & Push
+      - name: Commit & Push in neuen Branch (schont main)
+        id: pushtry
+        env:
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -e
           git add -A
-          git commit -m "codex: auto-maintenance heartbeat [skip ci]" || echo "nix zu committen"
-          # zurück in denselben Branch pushen
-          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+          git commit -m "chore(ci): heartbeat $RUN_ID [skip ci]" || echo "nix zu committen"
+          BR="codex/ci-heartbeat-$RUN_ID"
+          git checkout -B "$BR"
+          set +e
+          git push -u origin "$BR"
+          rc=$?; set -e
+          if [ $rc -ne 0 ]; then
+            echo "ok=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "ok=true"  >> $GITHUB_OUTPUT
+            echo "branch=$BR" >> $GITHUB_OUTPUT
+          fi
 
-      # --- optional: Issue anlegen, falls Job rot ist
-      - name: Create issue on failure
+      - name: PR zu main öffnen (optional)
+        if: steps.pushtry.outputs.ok == 'true'
+        env:
+          TOKEN: ${{ steps.tok.outputs.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ steps.pushtry.outputs.branch }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/pulls" \
+            -d "$(jq -n --arg t "ci: heartbeat ${GITHUB_RUN_ID}" \
+                        --arg h "${BRANCH}" \
+                        --arg b "main" \
+                        --arg body "Automatischer CI-Heartbeat." \
+                        '{title:$t, head:$h, base:$b, body:$body}')"
+
+      - name: Issue bei Fehler anlegen
         if: failure()
         uses: actions/github-script@v7
         with:
