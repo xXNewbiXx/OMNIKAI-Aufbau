@@ -7,7 +7,10 @@
       "name": "Start",
       "type": "n8n-nodes-base.start",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "id": "Code",
@@ -17,7 +20,10 @@
       "name": "Code (placeholder)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "notes": "Returns input with success flag"
     },
     {
@@ -36,7 +42,10 @@
       "name": "Format Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
-      "position": [760, 300],
+      "position": [
+        760,
+        300
+      ],
       "notes": "Formats execution result"
     }
   ],

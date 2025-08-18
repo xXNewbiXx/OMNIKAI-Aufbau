@@ -6,7 +6,10 @@
       "name": "Start",
       "type": "n8n-nodes-base.start",
       "typeVersion": 1,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -15,7 +18,10 @@
       "name": "Install Tor",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -24,7 +30,10 @@
       "name": "Setup Onion Service",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -33,7 +42,10 @@
       "name": "Confirm Setup",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
@@ -42,13 +54,56 @@
       "name": "Trigger Agent via Tor",
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     }
   ],
   "connections": {
-    "Start": { "main": [[{ "node": "Install Tor", "type": "main", "index": 0 }]] },
-    "Install Tor": { "main": [[{ "node": "Setup Onion Service", "type": "main", "index": 0 }]] },
-    "Setup Onion Service": { "main": [[{ "node": "Confirm Setup", "type": "main", "index": 0 }]] },
-    "Confirm Setup": { "main": [[{ "node": "Trigger Agent via Tor", "type": "main", "index": 0 }]] }
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Install Tor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Install Tor": {
+      "main": [
+        [
+          {
+            "node": "Setup Onion Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Onion Service": {
+      "main": [
+        [
+          {
+            "node": "Confirm Setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm Setup": {
+      "main": [
+        [
+          {
+            "node": "Trigger Agent via Tor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   }
 }
