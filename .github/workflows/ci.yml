@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-          # Falls private Submodule: Secret setzen. Wenn leer, nutzt checkout automatisch GITHUB_TOKEN.
+          # funktioniert auch, wenn das Secret leer ist – dann nutzt checkout GITHUB_TOKEN
           token: ${{ secrets.GH_PAT_SUBMODULES }}
           persist-credentials: false
 
@@ -52,14 +52,18 @@ jobs:
           git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${REPO}.git"
           git remote -v
 
-      - name: (Optional) Submodule via HTTPS erzwingen
-        if: ${{ secrets.GH_PAT_SUBMODULES != '' }}
+      # Kein if: secrets …  -> stattdessen im Skript skippen, wenn Token leer ist
+      - name: Submodule via HTTPS (skip wenn kein Token)
         env:
           GH_PAT_SUBMODULES: ${{ secrets.GH_PAT_SUBMODULES }}
         run: |
-          git config --global url."https://x-access-token:${GH_PAT_SUBMODULES}@github.com/".insteadOf "https://github.com/"
-          git submodule sync --recursive
-          git submodule update --init --recursive --remote || true
+          if [ -n "$GH_PAT_SUBMODULES" ]; then
+            git config --global url."https://x-access-token:${GH_PAT_SUBMODULES}@github.com/".insteadOf "https://github.com/"
+            git submodule sync --recursive
+            git submodule update --init --recursive --remote || true
+          else
+            echo "ℹ️  kein GH_PAT_SUBMODULES gesetzt – Submodule-Rewrite übersprungen"
+          fi
 
       - name: Heartbeat / Maintenance
         run: |
